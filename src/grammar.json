@@ -186,7 +186,7 @@
           "name": "properties",
           "content": {
             "type": "SYMBOL",
-            "name": "property_block"
+            "name": "property_or_conditional_block"
           }
         }
       ]
@@ -399,7 +399,7 @@
           "name": "properties",
           "content": {
             "type": "SYMBOL",
-            "name": "property_block"
+            "name": "property_or_conditional_block"
           }
         }
       ]

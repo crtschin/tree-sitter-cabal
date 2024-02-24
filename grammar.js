@@ -59,7 +59,7 @@ module.exports = grammar({
             repeat($.comment),
             field('type', alias('common', $.section_type)),
             field('name', $.section_name),
-            field('properties', $.property_block),
+            field('properties', $.property_or_conditional_block),
         ),
 
         executable: $ => seq(
@@ -94,7 +94,7 @@ module.exports = grammar({
             repeat($.comment),
             field('type', alias('test-suite', $.section_type)),
             field('name', $.section_name),
-            field('properties', $.property_block),
+            field('properties', $.property_or_conditional_block),
         ),
 
         section_name: $ => /\d*[a-zA-Z]\w*(-\d*[a-zA-Z]\w*)*/,
