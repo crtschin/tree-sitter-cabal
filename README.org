@@ -10,3 +10,27 @@ This is still very much a work in progress.
 direnv allow
 npm install
 #+end_src
+
+** Commands
+
+Running the tests:
+
+#+begin_src shell
+npm run test
+#+end_src
+
+Building:
+
+#+begin_src shell
+npm run build
+#+end_src
+
+Parse
+
+#+begin_src shell
+npm run parse
+#+end_src
+
+** References
+
+- [[https://tree-sitter.github.io/tree-sitter/creating-parsers][Tree-sitter: Creating parsers]]
