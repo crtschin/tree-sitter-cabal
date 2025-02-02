@@ -1,5 +1,5 @@
 {
-  "name": "tree-sitter-haskell-cabal",
+  "name": "tree-sitter-cabal",
   "version": "0.0.1",
   "description": "A tree-sitter grammar for Haskell's Cabal",
   "main": "bindings/node",
@@ -13,11 +13,15 @@
     "test": "tree-sitter test ",
     "parse": "tree-sitter parse"
   },
-  "author": "Magnus Therning",
+  "author": {
+    "name": "Magnus Therning",
+    "email": "magnus@therning.org",
+    "url": "https://magnus.therning.org"
+  },
   "license": "MIT",
-  "repository": "https://github.com/tree-sitter/tree-sitter-python",
+  "repository": "https://gitlab.com/magus/tree-sitter-cabal",
   "dependencies": {
-    "nan": "^2.17.0",
-    "tree-sitter-cli": "^0.20.7"
+    "nan": "^2.22.0",
+    "tree-sitter-cli": "^0.25.0"
   }
 }
