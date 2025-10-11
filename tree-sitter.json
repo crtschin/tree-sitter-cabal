@@ -19,6 +19,16 @@
     "description": "Cabal grammar for tree-sitter",
     "authors": [
       {
+        "name": "Magnus Therning",
+        "email": "magnus@therning.org",
+        "url": "https://magnus.therning.org"
+      },
+      {
+        "name": "Ananda Umamil",
+        "email": "zweimach@zweimach.org",
+        "url": "https://zweimach.org"
+      },
+      {
         "name": "Curtis Chin Jen Sem",
         "email": "csochinjensem@gmail.com",
         "url": "https://crtschin.com/"
