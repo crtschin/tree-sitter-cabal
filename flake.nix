@@ -6,9 +6,9 @@
 
   outputs =
     {
-      self,
       nixpkgs,
       utils,
+      ...
     }:
     utils.lib.eachDefaultSystem (
       system:
@@ -23,6 +23,7 @@
           buildInputs = with pkgs; [
             nixfmt
             nodejs
+            pnpm
             tree-sitter
             typescript-language-server
             haskellPackages.cabal-fmt
