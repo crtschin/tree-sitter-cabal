@@ -107,7 +107,7 @@
         "required": true,
         "types": [
           {
-            "type": "property_block",
+            "type": "property_or_conditional_block",
             "named": true
           }
         ]
@@ -556,7 +556,7 @@
         "required": true,
         "types": [
           {
-            "type": "property_block",
+            "type": "property_or_conditional_block",
             "named": true
           }
         ]

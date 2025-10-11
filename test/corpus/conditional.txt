@@ -5,6 +5,10 @@ Simplest conditional: single if
 cabal-version: 3.2
 name: singe-if
 
+common foo
+    if flag(do-if)
+      foo: bar
+
 library
     if flag(do-if)
       foo: bar
@@ -19,6 +23,21 @@ library
       (field_name)
       (field_value)))
   (sections
+    (common
+      (section_type)
+      (section_name)
+      (property_or_conditional_block
+        (indent)
+        (conditional
+          (condition_if
+            (condition)
+            (property_or_conditional_block
+              (indent)
+              (field
+                (field_name)
+                (field_value))
+              (dedent))))
+        (dedent)))
     (library
       (section_type)
       (property_or_conditional_block
@@ -42,6 +61,12 @@ cabal-version: 3.2
 name: singe-if
 
 library
+    if flag(do-if)
+      foo: bar
+    else
+      foo: baz
+
+test-suite foo-test
     if flag(do-if)
       foo: bar
     else
@@ -77,6 +102,28 @@ library
                 (field_name)
                 (field_value))
               (dedent))))
+        (dedent)))
+    (test_suite
+      (section_type)
+      (section_name)
+      (property_or_conditional_block
+        (indent)
+        (conditional
+          (condition_if
+            (condition)
+            (property_or_conditional_block
+              (indent)
+              (field
+                (field_name)
+                (field_value))
+              (dedent)))
+          (condition_else
+            (property_or_conditional_block
+              (indent)
+              (field
+                (field_name)
+                (field_value))
+              (dedent))))
         (dedent)))))
 
 ================================================================================
@@ -85,6 +132,14 @@ Conditional with elseif
 
 cabal-version: 3.2
 name: singe-if
+
+common foo
+    if flag(do-if)
+      foo: bar
+    elseif flag(no-if)
+      foo: baz
+    else
+      foo: qux
 
 library
     if flag(do-if)
@@ -104,6 +159,36 @@ library
       (field_name)
       (field_value)))
   (sections
+    (common
+      (section_type)
+      (section_name)
+      (property_or_conditional_block
+        (indent)
+        (conditional
+          (condition_if
+            (condition)
+            (property_or_conditional_block
+              (indent)
+              (field
+                (field_name)
+                (field_value))
+              (dedent)))
+          (condition_elseif
+            (condition)
+            (property_or_conditional_block
+              (indent)
+              (field
+                (field_name)
+                (field_value))
+              (dedent)))
+          (condition_else
+            (property_or_conditional_block
+              (indent)
+              (field
+                (field_name)
+                (field_value))
+              (dedent))))
+        (dedent)))
     (library
       (section_type)
       (property_or_conditional_block

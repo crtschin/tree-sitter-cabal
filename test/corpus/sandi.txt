@@ -271,7 +271,7 @@ benchmark sandi-bench
     (test_suite
       (section_type)
       (section_name)
-      (property_block
+      (property_or_conditional_block
         (indent)
         (field
           (field_name)
