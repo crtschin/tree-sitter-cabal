@@ -1,9 +1,33 @@
 {
-  inputs = { nixpkgs.url = "github:nixos/nixpkgs"; };
+  inputs = {
+    nixpkgs.url = "flake:nixpkgs/nixpkgs-unstable";
+    utils.url = "github:numtide/flake-utils";
+  };
 
-  outputs = { self, nixpkgs }:
-    with nixpkgs.legacyPackages.x86_64-linux; {
-      devShell.x86_64-linux =
-        mkShell { buildInputs = [ nodejs haskellPackages.cabal-fmt ]; };
-    };
+  outputs =
+    {
+      self,
+      nixpkgs,
+      utils,
+    }:
+    utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ ];
+        };
+      in
+      {
+        devShells.default = pkgs.mkShell {
+          buildInputs = with pkgs; [
+            nixfmt
+            nodejs
+            tree-sitter
+            typescript-language-server
+            haskellPackages.cabal-fmt
+          ];
+        };
+      }
+    );
 }
