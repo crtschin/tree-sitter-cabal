@@ -446,6 +446,32 @@
     }
   },
   {
+    "type": "qualified_name",
+    "named": true,
+    "fields": {
+      "package": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "package_name",
+            "named": true
+          }
+        ]
+      },
+      "sublibrary": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "sublibrary_name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "sections",
     "named": true,
     "fields": {},
@@ -581,6 +607,10 @@
     "named": false
   },
   {
+    "type": "=",
+    "named": false
+  },
+  {
     "type": "boolean",
     "named": true
   },
@@ -646,11 +676,11 @@
     "named": true
   },
   {
-    "type": "path",
+    "type": "package_name",
     "named": true
   },
   {
-    "type": "qualified_name",
+    "type": "path",
     "named": true
   },
   {
@@ -671,6 +701,10 @@
     "named": true
   },
   {
+    "type": "sublibrary_name",
+    "named": true
+  },
+  {
     "type": "text_fragment",
     "named": true
   },
@@ -681,5 +715,13 @@
   {
     "type": "version",
     "named": true
+  },
+  {
+    "type": "{",
+    "named": false
+  },
+  {
+    "type": "}",
+    "named": false
   }
 ]

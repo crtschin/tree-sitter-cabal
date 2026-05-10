@@ -21,16 +21,17 @@
 (condition) @string.special
 
 ; Literals in field values
-(boolean)        @constant.builtin.boolean
-(integer)        @number
-(version)        @number.float
-(iso_date)       @string.special
-(url)            @string.special.url
-(path)           @string.special.path
+(boolean)         @constant.builtin.boolean
+(integer)         @number
+(version)         @number.float
+(iso_date)        @string.special
+(url)             @string.special.url
+(path)            @string.special.path
 (module_name)    @module
-(qualified_name) @namespace
-(flag_token)     @constant
-(text_fragment)  @string
+(package_name)    @string
+(sublibrary_name) @string
+(flag_token)      @constant
+(text_fragment)   @string
 
 ; Bare identifiers in field values
 (field_value (identifier) @string)
@@ -38,6 +39,7 @@
 ; Operators
 (constraint_op) @operator
 "!"             @operator
+"="             @operator
 
 ; Wildcards / globs
 "*" @character.special
@@ -47,3 +49,14 @@
 ":" @punctuation.delimiter
 "(" @punctuation.bracket
 ")" @punctuation.bracket
+"{" @punctuation.bracket
+"}" @punctuation.bracket
+
+; `<URL>`: when constraint_op nodes flank a URL they're acting as bracket
+; punctuation, not as version comparison operators. The default operator
+; highlight above is overridden by this more-specific pattern.
+((constraint_op) @punctuation.bracket
+  .
+  (url)
+  .
+  (constraint_op) @punctuation.bracket)

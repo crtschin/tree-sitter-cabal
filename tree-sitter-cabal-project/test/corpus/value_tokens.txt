@@ -20,7 +20,7 @@ keep-going: yes
   (field
     name: (field_name)
     value: (field_value
-      (boolean))))
+      (identifier))))
 
 ================================================================================
 Version and constraint
@@ -98,4 +98,66 @@ allow-newer: pkga-1.1.2:dep-pkg
   (field
     name: (field_name)
     value: (field_value
-      (qualified_name))))
+      (qualified_name
+        package: (package_name)
+        sublibrary: (sublibrary_name)))))
+
+================================================================================
+ghc-options with -with-rtsopts=-N
+================================================================================
+
+program-options
+  ghc-options: -with-rtsopts=-N
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (stanza
+    header: (stanza_header
+      (keyword))
+    (field
+      name: (field_name)
+      value: (field_value
+        (flag_token)
+        (flag_token)))))
+
+================================================================================
+URL in angle brackets
+================================================================================
+
+source-repository-package
+  type: git
+  location: <https://example.com/repo.git>
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (stanza
+    header: (stanza_header
+      (keyword))
+    (field
+      name: (field_name)
+      value: (field_value
+        (identifier)))
+    (field
+      name: (field_name)
+      value: (field_value
+        (constraint_op)
+        (url)
+        (constraint_op)))))
+
+================================================================================
+Bare less-than version constraint
+================================================================================
+
+constraints: foo < 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (field
+    name: (field_name)
+    value: (field_value
+      (identifier)
+      (constraint_op)
+      (integer))))

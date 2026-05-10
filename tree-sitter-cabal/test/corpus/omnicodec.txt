@@ -95,7 +95,7 @@ executable oenc
         (identifier)
         (identifier)
         (identifier)
-        (boolean)
+        (identifier)
         (identifier)
         (url)
         (path))
@@ -111,7 +111,8 @@ executable oenc
         (identifier)
         (constraint_op)
         (identifier)
-        (text_fragment)))
+        (text_fragment)
+        (constraint_op)))
     (field
       (field_name)
       (field_value

@@ -12,7 +12,7 @@
 "else" @keyword.conditional
 
 ; stanza headers
-(package_name) @type
+(stanza_header (package_name) @type)
 (repo_name)    @module
 
 ; literals
@@ -24,8 +24,9 @@
 (path)      @string.special.path
 
 ; identifiers
-(qualified_name) @namespace
-(flag_token)     @constant
+(qualified_name (package_name)    @string)
+(qualified_name (sublibrary_name) @string)
+(flag_token)                      @constant
 
 ; bare identifiers in field values
 (field_value (identifier) @string)
@@ -50,6 +51,7 @@
 "!"             @operator
 "||"            @operator
 "&&"            @operator
+"="             @operator
 
 ; wildcards / globs
 "*" @character.special
@@ -59,3 +61,14 @@
 ":" @punctuation.delimiter
 "(" @punctuation.bracket
 ")" @punctuation.bracket
+"{" @punctuation.bracket
+"}" @punctuation.bracket
+
+; `<URL>`: when constraint_op nodes flank a URL they're acting as bracket
+; punctuation, not as version comparison operators. The default operator
+; highlight above is overridden by this more-specific pattern.
+((constraint_op) @punctuation.bracket
+  .
+  (url)
+  .
+  (constraint_op) @punctuation.bracket)

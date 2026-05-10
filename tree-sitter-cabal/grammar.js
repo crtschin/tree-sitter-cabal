@@ -142,6 +142,9 @@ module.exports = grammar({
         "*",
         "(",
         ")",
+        "{",
+        "}",
+        "=",
         "!",
       ),
 
@@ -159,7 +162,7 @@ module.exports = grammar({
       ),
 
     url: ($) =>
-      token(prec(9, /(https?|file|ftp|git|ssh)\+?[a-z]*:\/\/?[^\s,()]+/)),
+      token(prec(9, /(https?|file|ftp|git|ssh)\+?[a-z]*:\/\/?[^\s,()<>]+/)),
 
     version: ($) => token(prec(6, /[0-9]+(\.[0-9]+)+(\.\*)?/)),
 
@@ -167,7 +170,20 @@ module.exports = grammar({
       token(prec(5, /[A-Z][A-Za-z0-9_']*(\.[A-Z][A-Za-z0-9_']*)+/)),
 
     qualified_name: ($) =>
-      token(prec(4, /[A-Za-z][A-Za-z0-9_.-]*:[A-Za-z*][A-Za-z0-9_.-]*/)),
+      prec(
+        4,
+        seq(
+          field("package", alias($.identifier, $.package_name)),
+          ":",
+          field(
+            "sublibrary",
+            choice(
+              alias($.identifier, $.sublibrary_name),
+              alias("*", $.sublibrary_name),
+            ),
+          ),
+        ),
+      ),
 
     flag_token: ($) => token(prec(3, /[+\-][A-Za-z][A-Za-z0-9_-]*/)),
 
@@ -190,7 +206,7 @@ module.exports = grammar({
     constraint_op: ($) =>
       token(choice("==", ">=", "<=", "<", ">", "^>=", "&&", "||")),
 
-    text_fragment: ($) => token(prec(-1, /[^\s,()!*\n]+/)),
+    text_fragment: ($) => token(prec(-1, /[^\s,()!*<>{}=\n]+/)),
 
     property_or_conditional_block: ($) =>
       seq(

@@ -15,6 +15,7 @@ parse-corpus-hls:
 # Build the grammar via the nix flake (buildGrammar runs generate internally).
 build:
     nix build ..#tree-sitter-cabal
+    tree-sitter generate
 
 # Check grammar for errors
 check:

@@ -610,6 +610,18 @@
         },
         {
           "type": "STRING",
+          "value": "{"
+        },
+        {
+          "type": "STRING",
+          "value": "}"
+        },
+        {
+          "type": "STRING",
+          "value": "="
+        },
+        {
+          "type": "STRING",
           "value": "!"
         }
       ]
@@ -629,30 +641,6 @@
             {
               "type": "STRING",
               "value": "False"
-            },
-            {
-              "type": "STRING",
-              "value": "true"
-            },
-            {
-              "type": "STRING",
-              "value": "false"
-            },
-            {
-              "type": "STRING",
-              "value": "yes"
-            },
-            {
-              "type": "STRING",
-              "value": "no"
-            },
-            {
-              "type": "STRING",
-              "value": "on"
-            },
-            {
-              "type": "STRING",
-              "value": "off"
             }
           ]
         }
@@ -676,7 +664,7 @@
         "value": 9,
         "content": {
           "type": "PATTERN",
-          "value": "(https?|file|ftp|git|ssh)\\+?[a-z]*:\\/\\/?[^\\s,()]+"
+          "value": "(https?|file|ftp|git|ssh)\\+?[a-z]*:\\/\\/?[^\\s,()<>]+"
         }
       }
     },
@@ -703,14 +691,56 @@
       }
     },
     "qualified_name": {
-      "type": "TOKEN",
+      "type": "PREC",
+      "value": 4,
       "content": {
-        "type": "PREC",
-        "value": 4,
-        "content": {
-          "type": "PATTERN",
-          "value": "[A-Za-z][A-Za-z0-9_.-]*:[A-Za-z*][A-Za-z0-9_.-]*"
-        }
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "FIELD",
+            "name": "package",
+            "content": {
+              "type": "ALIAS",
+              "content": {
+                "type": "SYMBOL",
+                "name": "identifier"
+              },
+              "named": true,
+              "value": "package_name"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": ":"
+          },
+          {
+            "type": "FIELD",
+            "name": "sublibrary",
+            "content": {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "ALIAS",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "identifier"
+                  },
+                  "named": true,
+                  "value": "sublibrary_name"
+                },
+                {
+                  "type": "ALIAS",
+                  "content": {
+                    "type": "STRING",
+                    "value": "*"
+                  },
+                  "named": true,
+                  "value": "sublibrary_name"
+                }
+              ]
+            }
+          }
+        ]
       }
     },
     "flag_token": {
@@ -817,7 +847,7 @@
         "value": -1,
         "content": {
           "type": "PATTERN",
-          "value": "[^\\s,()!*\\n]+"
+          "value": "[^\\s,()!*<>{}=\\n]+"
         }
       }
     },

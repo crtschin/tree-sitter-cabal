@@ -221,3 +221,158 @@ common section
             (identifier))
           (dedent))
         (dedent)))))
+
+================================================================================
+tested-with with brace version set
+================================================================================
+
+cabal-version: 3.0
+name: pkg
+tested-with: GHC == {9.14.1, 9.12.2, 9.10.3, 9.8.4, 9.6.7}
+
+library
+  foo: bar
+
+--------------------------------------------------------------------------------
+
+(cabal
+  (cabal_version
+    (spec_version))
+  (properties
+    (field
+      (field_name)
+      (field_value
+        (identifier)))
+    (field
+      (field_name)
+      (field_value
+        (identifier)
+        (constraint_op)
+        (version)
+        (version)
+        (version)
+        (version)
+        (version))))
+  (sections
+    (library
+      (section_type)
+      (property_or_conditional_block
+        (indent)
+        (field
+          (field_name)
+          (field_value
+            (identifier)))
+        (dedent)))))
+
+================================================================================
+ghc-options with -with-rtsopts=-N
+================================================================================
+
+cabal-version: 3.0
+name: pkg
+
+executable foo
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+
+--------------------------------------------------------------------------------
+
+(cabal
+  (cabal_version
+    (spec_version))
+  (properties
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
+  (sections
+    (executable
+      (section_type)
+      (section_name)
+      (property_or_conditional_block
+        (indent)
+        (field
+          (field_name)
+          (field_value
+            (flag_token)
+            (flag_token)
+            (flag_token)
+            (flag_token)))
+        (dedent)))))
+
+================================================================================
+build-depends with sublibrary qualified name
+================================================================================
+
+cabal-version: 3.0
+name: pkg
+
+library
+  build-depends:
+      base
+    , haskell-language-server:hls-cabal-plugin
+
+--------------------------------------------------------------------------------
+
+(cabal
+  (cabal_version
+    (spec_version))
+  (properties
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
+  (sections
+    (library
+      (section_type)
+      (property_or_conditional_block
+        (indent)
+        (field
+          (field_name)
+          (indent)
+          (field_value
+            (identifier))
+          (field_value
+            (qualified_name
+              (package_name)
+              (sublibrary_name)))
+          (dedent))
+        (dedent)))))
+
+================================================================================
+description with angle-bracketed URL
+================================================================================
+
+cabal-version: 3.0
+name: pkg
+description: see <https://example.com/x>
+
+library
+  foo: bar
+
+--------------------------------------------------------------------------------
+
+(cabal
+  (cabal_version
+    (spec_version))
+  (properties
+    (field
+      (field_name)
+      (field_value
+        (identifier)))
+    (field
+      (field_name)
+      (field_value
+        (identifier)
+        (constraint_op)
+        (url)
+        (constraint_op))))
+  (sections
+    (library
+      (section_type)
+      (property_or_conditional_block
+        (indent)
+        (field
+          (field_name)
+          (field_value
+            (identifier)))
+        (dedent)))))

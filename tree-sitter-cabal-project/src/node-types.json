@@ -466,6 +466,32 @@
     }
   },
   {
+    "type": "qualified_name",
+    "named": true,
+    "fields": {
+      "package": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "package_name",
+            "named": true
+          }
+        ]
+      },
+      "sublibrary": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "sublibrary_name",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "source_file",
     "named": true,
     "root": true,
@@ -578,6 +604,10 @@
     "named": false
   },
   {
+    "type": "=",
+    "named": false
+  },
+  {
     "type": "boolean",
     "named": true
   },
@@ -627,11 +657,11 @@
     "named": true
   },
   {
-    "type": "qualified_name",
+    "type": "repo_name",
     "named": true
   },
   {
-    "type": "repo_name",
+    "type": "sublibrary_name",
     "named": true
   },
   {
@@ -643,7 +673,15 @@
     "named": true
   },
   {
+    "type": "{",
+    "named": false
+  },
+  {
     "type": "||",
+    "named": false
+  },
+  {
+    "type": "}",
     "named": false
   }
 ]

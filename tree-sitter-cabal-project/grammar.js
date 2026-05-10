@@ -86,6 +86,9 @@ export default grammar({
         "*",
         "(",
         ")",
+        "{",
+        "}",
+        "=",
         "!",
       ),
 
@@ -107,10 +110,23 @@ export default grammar({
     version: ($) => token(prec(5, /[0-9]+(\.[0-9]+)+(\.\*)?/)),
 
     url: ($) =>
-      token(prec(8, /(https?|file|ftp|git|ssh)\+?[a-z]*:\/\/?[^\s,()]+/)),
+      token(prec(8, /(https?|file|ftp|git|ssh)\+?[a-z]*:\/\/?[^\s,()<>]+/)),
 
     qualified_name: ($) =>
-      token(prec(4, /[A-Za-z][A-Za-z0-9_.-]*:[A-Za-z*][A-Za-z0-9_.-]*/)),
+      prec(
+        4,
+        seq(
+          field("package", alias($.identifier, $.package_name)),
+          ":",
+          field(
+            "sublibrary",
+            choice(
+              alias($.identifier, $.sublibrary_name),
+              alias("*", $.sublibrary_name),
+            ),
+          ),
+        ),
+      ),
 
     flag_token: ($) => token(prec(3, /[+\-][A-Za-z][A-Za-z0-9_-]*/)),
 
