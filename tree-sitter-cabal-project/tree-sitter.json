@@ -28,7 +28,7 @@
       }
     ],
     "links": {
-      "repository": "https://github.com/crtschin/tree-sitter-cabal-project",
+      "repository": "https://github.com/crtschin/tree-sitter-cabal",
       "funding": ""
     }
   },
