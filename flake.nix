@@ -58,6 +58,7 @@
             haskellPackages.cabal-fmt
             tapview
             just
+            nodejs
             nixfmt
             prettier
             tree-sitter

@@ -258,3 +258,45 @@ library
           (field_value
             (identifier)))
         (dedent)))))
+
+================================================================================
+Comments at same indent as if, between condition and deeper body
+================================================================================
+
+cabal-version: 3.4
+name: pkg
+
+library
+  if !os(windows) && flag(dynamic)
+  -- comment at same indent as if
+  -- another comment
+    ghc-options: -dynamic
+
+--------------------------------------------------------------------------------
+
+(cabal
+  (cabal_version
+    (spec_version))
+  (properties
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
+  (sections
+    (library
+      (section_type)
+      (property_or_conditional_block
+        (indent)
+        (conditional
+          (condition_if
+            (condition)
+            (property_or_conditional_block
+              (indent)
+              (comment)
+              (comment)
+              (field
+                (field_name)
+                (field_value
+                  (flag_token)))
+              (dedent))))
+        (dedent)))))
