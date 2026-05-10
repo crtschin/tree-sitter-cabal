@@ -16,11 +16,9 @@ library
 --------------------------------------------------------------------------------
 
 (cabal
+  (cabal_version
+    (spec_version))
   (properties
-    (field
-      (field_name)
-      (field_value
-        (version)))
     (field
       (field_name)
       (field_value
@@ -80,11 +78,9 @@ test-suite foo-test
 --------------------------------------------------------------------------------
 
 (cabal
+  (cabal_version
+    (spec_version))
   (properties
-    (field
-      (field_name)
-      (field_value
-        (version)))
     (field
       (field_name)
       (field_value
@@ -164,11 +160,9 @@ library
 --------------------------------------------------------------------------------
 
 (cabal
+  (cabal_version
+    (spec_version))
   (properties
-    (field
-      (field_name)
-      (field_value
-        (version)))
     (field
       (field_name)
       (field_value

@@ -94,28 +94,51 @@ count_indent:
             break;
         }
     }
-    // If the line starts with '--' and INDENTED is valid for this indent level,
-    // consume the comment line in-scanner and restart the indent count.
-    if (lexer->lookahead == '-' && valid_symbols[INDENTED] && indent > prev_indent_lvl) {
-        lexer->advance(lexer, true);  // past first '-'
-        if (lexer->lookahead == '-') {
-            // Confirmed comment inside a continuation block. Consume to EOL.
-            while (lexer->lookahead != '\n' && !lexer->eof(lexer)) {
-                lexer->advance(lexer, true);
-            }
-            indent = 0;
-            goto count_indent;
+    // Cabal comments are layout-transparent: peek past any `--` comment lines
+    // that are less indented than the current block to find the next significant
+    // line's indent. Set mark_end before the first such comment so tree-sitter
+    // re-lexes it as a `comment` extras node rather than consuming it inside our
+    // layout token. Comments at indent >= cur stay in the block and are handled
+    // by tree-sitter's normal extras mechanism.
+    bool marked = false;
+    while (lexer->lookahead == '-' && indent < cur_indent_lvl) {
+        if (!marked) {
+            lexer->mark_end(lexer);
+            marked = true;
         }
-        // Single '-', not a comment. Fall through with current indent.
+        lexer->advance(lexer, true);  // past first '-'
+        if (lexer->lookahead != '-') {
+            break;  // single '-', not a comment; token ends before it
+        }
+        while (lexer->lookahead != '\n' && !lexer->eof(lexer)) {
+            lexer->advance(lexer, true);
+        }
+        if (lexer->eof(lexer)) {
+            break;
+        }
+        lexer->advance(lexer, true);  // past '\n'
+        indent = 0;
+        while (true) {
+            if (lexer->lookahead == ' ') {
+                indent++;
+                lexer->advance(lexer, true);
+            } else if (lexer->lookahead == '\n') {
+                indent = 0;
+                lexer->advance(lexer, true);
+            } else {
+                break;
+            }
+        }
     }
 
     if (valid_symbols[INDENT] && indent > cur_indent_lvl) {
         array_push(indent_lvls, indent);
         lexer->result_symbol = INDENT;
         return true;
-    } else if (valid_symbols[INDENTED] && indent > prev_indent_lvl && indent <= cur_indent_lvl) {
+    } else if (valid_symbols[INDENTED] && indent > prev_indent_lvl) {
         // Continuation line still inside the value block.
-        // Accepts any indent in (prev, cur] for cabal's hanging-indent style.
+        // Accepts any indent > prev for cabal's hanging-indent style;
+        // no upper bound so deeper-indented continuation lines work too.
         lexer->result_symbol = INDENTED;
         return true;
     } else if (valid_symbols[DEDENT] && indent < cur_indent_lvl) {
@@ -123,7 +146,10 @@ count_indent:
         // NEWLINE (or DEDENT) so the scanner token ends before `--` and the
         // comment is lexed as an extras (comment) node on the next pass.
         if (lexer->lookahead == '-') {
-            lexer->mark_end(lexer);
+            if (!marked) {
+                lexer->mark_end(lexer);
+                marked = true;
+            }
             lexer->advance(lexer, true);
             if (lexer->lookahead == '-') {
                 if (valid_symbols[NEWLINE]) {

@@ -26,7 +26,8 @@ module.exports = grammar({
         optional($.sections),
       ),
 
-    cabal_version: ($) => seq("cabal-version", ":", $.spec_version),
+    cabal_version: ($) =>
+      seq(repeat($._newline), "cabal-version", ":", $.spec_version),
 
     spec_version: ($) => /\d+\.\d+(\.\d+)?\s*\n/,
 
@@ -119,7 +120,7 @@ module.exports = grammar({
             optional($.field_value),
             $.indent,
             $.field_value,
-            repeat(seq($._indented, $.field_value)),
+            repeat(seq(repeat1($._indented), $.field_value)),
             $.dedent,
           ),
         ),

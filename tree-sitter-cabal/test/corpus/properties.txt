@@ -52,11 +52,9 @@ library
 --------------------------------------------------------------------------------
 
 (cabal
+  (cabal_version
+    (spec_version))
   (properties
-    (field
-      (field_name)
-      (field_value
-        (version)))
     (field
       (field_name)
       (field_value
@@ -110,12 +108,10 @@ executable foo
 --------------------------------------------------------------------------------
 
 (cabal
+  (cabal_version
+    (spec_version))
+  (comment)
   (properties
-    (field
-      (field_name)
-      (field_value
-        (version)))
-    (comment)
     (field
       (field_name)
       (field_value
@@ -182,11 +178,9 @@ library
 --------------------------------------------------------------------------------
 
 (cabal
+  (cabal_version
+    (spec_version))
   (properties
-    (field
-      (field_name)
-      (field_value
-        (version)))
     (field
       (field_name)
       (field_value

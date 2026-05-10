@@ -130,16 +130,14 @@ benchmark sandi-bench
 --------------------------------------------------------------------------------
 
 (cabal
+  (cabal_version
+    (spec_version))
+  (comment)
+  (comment)
+  (comment)
+  (comment)
+  (comment)
   (properties
-    (field
-      (field_name)
-      (field_value
-        (version)))
-    (comment)
-    (comment)
-    (comment)
-    (comment)
-    (comment)
     (field
       (field_name)
       (field_value

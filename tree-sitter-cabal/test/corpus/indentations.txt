@@ -14,11 +14,9 @@ flag bar
 --------------------------------------------------------------------------------
 
 (cabal
+  (cabal_version
+    (spec_version))
   (properties
-    (field
-      (field_name)
-      (field_value
-        (version)))
     (field
       (field_name)
       (indent)
@@ -58,11 +56,9 @@ executable foo
 --------------------------------------------------------------------------------
 
 (cabal
+  (cabal_version
+    (spec_version))
   (properties
-    (field
-      (field_name)
-      (field_value
-        (version)))
     (field
       (field_name)
       (field_value

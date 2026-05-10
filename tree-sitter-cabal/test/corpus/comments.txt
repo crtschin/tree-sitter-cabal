@@ -1,14 +1,14 @@
 ================================================================================
-Single value fields
+Column-0 comment between two fields in an indented section
 ================================================================================
 
-cabal-version: 1.0
-name: a-package
+cabal-version: 3.4
+name: pkg
 
-common section
-  field-one: value-one
-  field-two:
-    value-one
+library
+  foo: bar
+-- comment in middle of block
+  baz: qux
 
 --------------------------------------------------------------------------------
 
@@ -21,7 +21,46 @@ common section
       (field_value
         (identifier))))
   (sections
-    (common
+    (library
+      (section_type)
+      (property_or_conditional_block
+        (indent)
+        (field
+          (field_name)
+          (field_value
+            (identifier)))
+        (comment)
+        (field
+          (field_name)
+          (field_value
+            (identifier)))
+        (dedent)))))
+
+================================================================================
+Column-0 comment between a field and a conditional (hls pattern)
+================================================================================
+
+cabal-version: 3.4
+name: pkg
+
+test-suite ts
+  default-extensions: OverloadedStrings
+-- comment about flags
+  if flag(eval)
+    cpp-options: -Dhls_eval
+
+--------------------------------------------------------------------------------
+
+(cabal
+  (cabal_version
+    (spec_version))
+  (properties
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
+  (sections
+    (test_suite
       (section_type)
       (section_name)
       (property_or_conditional_block
@@ -30,26 +69,32 @@ common section
           (field_name)
           (field_value
             (identifier)))
-        (field
-          (field_name)
-          (indent)
-          (field_value
-            (identifier))
-          (dedent))
+        (comment)
+        (conditional
+          (condition_if
+            (condition)
+            (property_or_conditional_block
+              (indent)
+              (field
+                (field_name)
+                (field_value
+                  (flag_token)))
+              (dedent))))
         (dedent)))))
 
 ================================================================================
-Comment in continuation list
+Multiple consecutive column-0 comments inside an indented section
 ================================================================================
 
-cabal-version: 3.0
+cabal-version: 3.4
 name: pkg
 
 library
-  exposed-modules:
-    Foo.Bar
-    -- intentionally exclude Baz
-    Foo.Qux
+  foo: bar
+-- comment 1
+-- comment 2
+-- comment 3
+  baz: qux
 
 --------------------------------------------------------------------------------
 
@@ -68,27 +113,82 @@ library
         (indent)
         (field
           (field_name)
-          (indent)
           (field_value
-            (module_name))
-          (comment)
+            (identifier)))
+        (comment)
+        (comment)
+        (comment)
+        (field
+          (field_name)
           (field_value
-            (module_name))
-          (dedent))
+            (identifier)))
         (dedent)))))
 
 ================================================================================
-build-depends with version constraints
+Column-0 comment between two conditionals inside a library
 ================================================================================
 
-cabal-version: 3.0
+cabal-version: 3.4
 name: pkg
 
 library
-  build-depends:
-      base >= 4.14 && < 5
-    , bytestring ^>= 0.11
-    , text
+  if flag(eval)
+    cpp-options: -Dhls_eval
+-- comment between conditionals
+  if flag(ormolu)
+    cpp-options: -Dhls_ormolu
+
+--------------------------------------------------------------------------------
+
+(cabal
+  (cabal_version
+    (spec_version))
+  (properties
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
+  (sections
+    (library
+      (section_type)
+      (property_or_conditional_block
+        (indent)
+        (conditional
+          (condition_if
+            (condition)
+            (property_or_conditional_block
+              (indent)
+              (field
+                (field_name)
+                (field_value
+                  (flag_token)))
+              (dedent))))
+        (comment)
+        (conditional
+          (condition_if
+            (condition)
+            (property_or_conditional_block
+              (indent)
+              (field
+                (field_name)
+                (field_value
+                  (flag_token)))
+              (dedent))))
+        (dedent)))))
+
+================================================================================
+Column-0 comment between sections stays outside both sections
+================================================================================
+
+cabal-version: 3.4
+name: pkg
+
+library
+  foo: bar
+
+-- this comment is between sections
+executable bin
+  baz: qux
 
 --------------------------------------------------------------------------------
 
@@ -107,89 +207,11 @@ library
         (indent)
         (field
           (field_name)
-          (indent)
           (field_value
-            (identifier)
-            (constraint_op)
-            (version)
-            (constraint_op)
-            (constraint_op)
-            (integer))
-          (field_value
-            (identifier)
-            (constraint_op)
-            (version))
-          (field_value
-            (identifier))
-          (dedent))
-        (dedent)))))
-
-================================================================================
-exposed-modules with module and bare-uppercase items
-================================================================================
-
-cabal-version: 3.0
-name: pkg
-
-library
-  exposed-modules:
-    Codec.Binary.Base16
-    Paths_pkg
-
---------------------------------------------------------------------------------
-
-(cabal
-  (cabal_version
-    (spec_version))
-  (properties
-    (field
-      (field_name)
-      (field_value
-        (identifier))))
-  (sections
-    (library
-      (section_type)
-      (property_or_conditional_block
-        (indent)
-        (field
-          (field_name)
-          (indent)
-          (field_value
-            (module_name))
-          (field_value
-            (identifier))
-          (dedent))
-        (dedent)))))
-
-================================================================================
-Multiple value fields
-================================================================================
-
-cabal-version: 1.0
-name: a-package
-
-common section
-  field-a: value-one value-two value-three
-  field-c: value-one
-    value-two
-    value-three
-  field-f:
-    value-one
-    value-two
-    value-three
-
---------------------------------------------------------------------------------
-
-(cabal
-  (cabal_version
-    (spec_version))
-  (properties
-    (field
-      (field_name)
-      (field_value
-        (identifier))))
-  (sections
-    (common
+            (identifier)))
+        (dedent)))
+    (comment)
+    (executable
       (section_type)
       (section_name)
       (property_or_conditional_block
@@ -197,27 +219,42 @@ common section
         (field
           (field_name)
           (field_value
-            (identifier)
-            (identifier)
             (identifier)))
+        (dedent)))))
+
+================================================================================
+Inline trailing comment after a field value
+================================================================================
+
+cabal-version: 3.4
+name: pkg
+
+library
+  foo: bar -- trailing
+  baz: qux
+
+--------------------------------------------------------------------------------
+
+(cabal
+  (cabal_version
+    (spec_version))
+  (properties
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
+  (sections
+    (library
+      (section_type)
+      (property_or_conditional_block
+        (indent)
         (field
           (field_name)
           (field_value
             (identifier))
-          (indent)
-          (field_value
-            (identifier))
-          (field_value
-            (identifier))
-          (dedent))
+          (comment))
         (field
           (field_name)
-          (indent)
           (field_value
-            (identifier))
-          (field_value
-            (identifier))
-          (field_value
-            (identifier))
-          (dedent))
+            (identifier)))
         (dedent)))))

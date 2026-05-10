@@ -11,11 +11,9 @@ common base
 --------------------------------------------------------------------------------
 
 (cabal
+  (cabal_version
+    (spec_version))
   (properties
-    (field
-      (field_name)
-      (field_value
-        (version)))
     (field
       (field_name)
       (field_value
@@ -45,11 +43,9 @@ library
 --------------------------------------------------------------------------------
 
 (cabal
+  (cabal_version
+    (spec_version))
   (properties
-    (field
-      (field_name)
-      (field_value
-        (version)))
     (field
       (field_name)
       (field_value
@@ -78,11 +74,9 @@ library named-lib
 --------------------------------------------------------------------------------
 
 (cabal
+  (cabal_version
+    (spec_version))
   (properties
-    (field
-      (field_name)
-      (field_value
-        (version)))
     (field
       (field_name)
       (field_value

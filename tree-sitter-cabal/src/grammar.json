@@ -47,6 +47,13 @@
       "type": "SEQ",
       "members": [
         {
+          "type": "REPEAT",
+          "content": {
+            "type": "SYMBOL",
+            "name": "_newline"
+          }
+        },
+        {
           "type": "STRING",
           "value": "cabal-version"
         },
@@ -500,8 +507,11 @@
                     "type": "SEQ",
                     "members": [
                       {
-                        "type": "SYMBOL",
-                        "name": "_indented"
+                        "type": "REPEAT1",
+                        "content": {
+                          "type": "SYMBOL",
+                          "name": "_indented"
+                        }
                       },
                       {
                         "type": "SYMBOL",
