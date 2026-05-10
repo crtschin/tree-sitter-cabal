@@ -167,6 +167,10 @@
           "named": true
         },
         {
+          "type": "quoted_string",
+          "named": true
+        },
+        {
           "type": "url",
           "named": true
         },
@@ -654,6 +658,10 @@
   },
   {
     "type": "path",
+    "named": true
+  },
+  {
+    "type": "quoted_string",
     "named": true
   },
   {

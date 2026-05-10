@@ -376,3 +376,35 @@ library
           (field_value
             (identifier)))
         (dedent)))))
+
+================================================================================
+quoted string with -- inside (not a comment)
+================================================================================
+
+cabal-version: 3.0
+name: pkg
+
+executable foo
+  ghc-options: "-with-rtsopts=-T -Iw1 --disable-delayed-os-memory-return"
+
+--------------------------------------------------------------------------------
+
+(cabal
+  (cabal_version
+    (spec_version))
+  (properties
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
+  (sections
+    (executable
+      (section_type)
+      (section_name)
+      (property_or_conditional_block
+        (indent)
+        (field
+          (field_name)
+          (field_value
+            (quoted_string)))
+        (dedent)))))

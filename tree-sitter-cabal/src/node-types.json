@@ -294,6 +294,10 @@
           "named": true
         },
         {
+          "type": "quoted_string",
+          "named": true
+        },
+        {
           "type": "text_fragment",
           "named": true
         },
@@ -681,6 +685,10 @@
   },
   {
     "type": "path",
+    "named": true
+  },
+  {
+    "type": "quoted_string",
     "named": true
   },
   {

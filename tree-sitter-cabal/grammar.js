@@ -136,6 +136,7 @@ module.exports = grammar({
         $.integer,
         $.path,
         $.identifier,
+        $.quoted_string,
         $.text_fragment,
         $.constraint_op,
         ",",
@@ -200,7 +201,9 @@ module.exports = grammar({
     constraint_op: ($) =>
       token(choice("==", ">=", "<=", "<", ">", "^>=", "&&", "||")),
 
-    text_fragment: ($) => token(prec(-1, /[^\s,()!*<>{}=\n]+/)),
+    text_fragment: ($) => token(prec(-1, /[^\s,()!*<>{}=\n"]+/)),
+
+    quoted_string: ($) => token(/"[^"\n]*"/),
 
     property_or_conditional_block: ($) =>
       seq(

@@ -80,6 +80,7 @@ export default grammar({
         $.flag_token,
         $.integer,
         $.identifier,
+        $.quoted_string,
         $.constraint_op,
         $.path,
         ",",
@@ -142,6 +143,8 @@ export default grammar({
           choice(/\/[A-Za-z0-9_*?.\-\/]+/, /\.\.?(\/[A-Za-z0-9_*?.\-\/]*)?/),
         ),
       ),
+
+    quoted_string: ($) => token(/"[^"\n]*"/),
 
     constraint_op: ($) =>
       token(choice("==", ">=", "<=", "<", ">", "^>=", "&&", "||")),

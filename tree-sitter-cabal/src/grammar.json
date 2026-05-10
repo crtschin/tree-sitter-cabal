@@ -586,6 +586,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "quoted_string"
+        },
+        {
+          "type": "SYMBOL",
           "name": "text_fragment"
         },
         {
@@ -847,8 +851,15 @@
         "value": -1,
         "content": {
           "type": "PATTERN",
-          "value": "[^\\s,()!*<>{}=\\n]+"
+          "value": "[^\\s,()!*<>{}=\\n\"]+"
         }
+      }
+    },
+    "quoted_string": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "\"[^\"\\n]*\""
       }
     },
     "property_or_conditional_block": {

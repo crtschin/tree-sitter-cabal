@@ -162,6 +162,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "quoted_string"
+        },
+        {
+          "type": "SYMBOL",
           "name": "constraint_op"
         },
         {
@@ -359,6 +363,13 @@
             }
           ]
         }
+      }
+    },
+    "quoted_string": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "\"[^\"\\n]*\""
       }
     },
     "constraint_op": {

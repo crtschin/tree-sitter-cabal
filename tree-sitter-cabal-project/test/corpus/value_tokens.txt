@@ -161,3 +161,21 @@ constraints: foo < 2
       (identifier)
       (constraint_op)
       (integer))))
+
+================================================================================
+Quoted string with -- inside (not a comment)
+================================================================================
+
+program-options
+  ghc-options: "-with-rtsopts=-T -Iw1 --disable-delayed-os-memory-return"
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (stanza
+    header: (stanza_header
+      (keyword))
+    (field
+      name: (field_name)
+      value: (field_value
+        (quoted_string)))))
