@@ -11,12 +11,15 @@ common base
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
   (sections
     (common
       (section_type)
@@ -25,7 +28,8 @@ common base
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (dedent)))))
 
 ================================================================================
@@ -41,12 +45,15 @@ library
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
   (sections
     (library
       (section_type)
@@ -54,7 +61,8 @@ library
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (dedent)))))
 
 ================================================================================
@@ -70,12 +78,15 @@ library named-lib
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
   (sections
     (library
       (section_type)
@@ -84,5 +95,6 @@ library named-lib
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (dedent)))))

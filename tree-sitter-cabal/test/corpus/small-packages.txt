@@ -14,12 +14,15 @@ executable foo
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
   (sections
     (library
       (section_type)
@@ -27,7 +30,8 @@ executable foo
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (dedent)))
     (executable
       (section_type)
@@ -36,5 +40,7 @@ executable foo
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)
+            (identifier)))
         (dedent)))))

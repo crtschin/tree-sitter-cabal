@@ -3,43 +3,53 @@
 module.exports = grammar({
   name: "cabal",
 
-  extras: ($) => [$.silly, /\s|\n/],
+  extras: ($) => [$.silly, $.comment, /[ \t]/],
 
-  externals: ($) => [$.silly, $.indent, $.dedent, $._indented],
+  externals: ($) => [
+    $.silly,
+    $.indent,
+    $.dedent,
+    $._indented,
+    $._newline,
+  ],
 
-  conflicts: ($) => [[$.properties], [$.sections]],
+  word: ($) => $.identifier,
+
+  conflicts: ($) => [],
 
   rules: {
     cabal: ($) =>
       seq(
         optional($.cabal_version),
+        repeat($._newline),
         $.properties,
-        $.sections,
-        repeat($.comment),
+        optional($.sections),
       ),
 
     cabal_version: ($) => seq("cabal-version", ":", $.spec_version),
 
     spec_version: ($) => /\d+\.\d+(\.\d+)?\s*\n/,
 
-    properties: ($) => repeat1(seq(repeat($.comment), $.field)),
+    properties: ($) => repeat1(seq($.field, repeat($._newline))),
 
     sections: ($) =>
       repeat1(
-        choice(
-          $.benchmark,
-          $.common,
-          $.executable,
-          $.flag,
-          $.library,
-          $.source_repository,
-          $.test_suite,
+        seq(
+          choice(
+            $.benchmark,
+            $.common,
+            $.executable,
+            $.flag,
+            $.library,
+            $.source_repository,
+            $.test_suite,
+          ),
+          repeat($._newline),
         ),
       ),
 
     benchmark: ($) =>
       seq(
-        repeat($.comment),
         field("type", alias("benchmark", $.section_type)),
         field("name", $.section_name),
         field("properties", $.property_block),
@@ -47,7 +57,6 @@ module.exports = grammar({
 
     common: ($) =>
       seq(
-        repeat($.comment),
         field("type", alias("common", $.section_type)),
         field("name", $.section_name),
         field("properties", $.property_or_conditional_block),
@@ -55,7 +64,6 @@ module.exports = grammar({
 
     executable: ($) =>
       seq(
-        repeat($.comment),
         field("type", alias("executable", $.section_type)),
         field("name", $.section_name),
         field("properties", $.property_or_conditional_block),
@@ -63,7 +71,6 @@ module.exports = grammar({
 
     flag: ($) =>
       seq(
-        repeat($.comment),
         field("type", alias("flag", $.section_type)),
         field("name", $.section_name),
         field("properties", $.property_block),
@@ -71,7 +78,6 @@ module.exports = grammar({
 
     library: ($) =>
       seq(
-        repeat($.comment),
         field("type", alias("library", $.section_type)),
         optional(field("name", $.section_name)),
         field("properties", $.property_or_conditional_block),
@@ -79,7 +85,6 @@ module.exports = grammar({
 
     source_repository: ($) =>
       seq(
-        repeat($.comment),
         field("type", alias("source-repository", $.section_type)),
         field("name", $.section_name),
         field("properties", $.property_block),
@@ -87,7 +92,6 @@ module.exports = grammar({
 
     test_suite: ($) =>
       seq(
-        repeat($.comment),
         field("type", alias("test-suite", $.section_type)),
         field("name", $.section_name),
         field("properties", $.property_or_conditional_block),
@@ -100,8 +104,8 @@ module.exports = grammar({
     property_block: ($) =>
       seq(
         $.indent,
-        repeat($.comment),
-        repeat1(seq($.field, repeat($.comment))),
+        repeat($._newline),
+        repeat1(seq($.field, repeat($._newline))),
         $.dedent,
       ),
 
@@ -109,9 +113,10 @@ module.exports = grammar({
       seq(
         $.field_name,
         ":",
-        $.field_value,
-        optional(
+        choice(
+          seq(optional($.field_value), $._newline),
           seq(
+            optional($.field_value),
             $.indent,
             $.field_value,
             repeat(seq($._indented, $.field_value)),
@@ -122,13 +127,81 @@ module.exports = grammar({
 
     field_name: ($) => /\w(\w|-)+/,
 
-    field_value: ($) => /.+/,
+    field_value: ($) => repeat1($._value_token),
+
+    _value_token: ($) =>
+      choice(
+        $.boolean,
+        $.iso_date,
+        $.url,
+        $.version,
+        $.module_name,
+        $.qualified_name,
+        $.flag_token,
+        $.integer,
+        $.path,
+        $.identifier,
+        $.text_fragment,
+        $.constraint_op,
+        ",",
+        "*",
+        "(",
+        ")",
+        "!",
+      ),
+
+    boolean: ($) =>
+      token(
+        prec(
+          7,
+          choice("True", "False", "true", "false", "yes", "no", "on", "off"),
+        ),
+      ),
+
+    iso_date: ($) =>
+      token(
+        prec(8, /[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}Z)?/),
+      ),
+
+    url: ($) =>
+      token(prec(9, /(https?|file|ftp|git|ssh)\+?[a-z]*:\/\/?[^\s,()]+/)),
+
+    version: ($) => token(prec(6, /[0-9]+(\.[0-9]+)+(\.\*)?/)),
+
+    module_name: ($) =>
+      token(prec(5, /[A-Z][A-Za-z0-9_']*(\.[A-Z][A-Za-z0-9_']*)+/)),
+
+    qualified_name: ($) =>
+      token(prec(4, /[A-Za-z][A-Za-z0-9_.-]*:[A-Za-z*][A-Za-z0-9_.-]*/)),
+
+    flag_token: ($) => token(prec(3, /[+\-][A-Za-z][A-Za-z0-9_-]*/)),
+
+    integer: ($) => token(prec(2, /[0-9]+/)),
+
+    identifier: ($) => token(prec(1, /[A-Za-z_][A-Za-z0-9_.\-]*/)),
+
+    path: ($) =>
+      token(
+        prec(
+          1,
+          choice(
+            /\/[A-Za-z0-9_*?.\-\/]+/,
+            /\.\.?(\/[A-Za-z0-9_*?.\-\/]*)?/,
+            /[A-Za-z0-9_.\-]+\/[A-Za-z0-9_*?.\-\/]*/,
+          ),
+        ),
+      ),
+
+    constraint_op: ($) =>
+      token(choice("==", ">=", "<=", "<", ">", "^>=", "&&", "||")),
+
+    text_fragment: ($) => token(prec(-1, /[^\s,()!*\n]+/)),
 
     property_or_conditional_block: ($) =>
       seq(
         $.indent,
-        repeat($.comment),
-        repeat1(seq(choice($.field, $.conditional), repeat($.comment))),
+        repeat($._newline),
+        repeat1(seq(choice($.field, $.conditional), repeat($._newline))),
         $.dedent,
       ),
 

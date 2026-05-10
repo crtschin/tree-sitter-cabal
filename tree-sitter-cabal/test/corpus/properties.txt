@@ -15,13 +15,16 @@ library
   (properties
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (identifier)))
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (identifier)))
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (version))))
   (sections
     (library
       (section_type)
@@ -29,7 +32,8 @@ library
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (dedent)))))
 
 ================================================================================
@@ -48,21 +52,27 @@ library
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (version)))
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (identifier)))
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (version)))
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (identifier)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
   (sections
     (library
       (section_type)
@@ -70,7 +80,8 @@ library
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (dedent)))))
 
 ================================================================================
@@ -99,43 +110,50 @@ executable foo
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
+    (field
+      (field_name)
+      (field_value
+        (version)))
     (comment)
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (identifier)))
     (comment)
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (identifier)))
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (identifier)))
+    (comment))
   (sections
     (library
-      (comment)
       (section_type)
       (property_or_conditional_block
         (indent)
         (comment)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (comment)
         (dedent)))
+    (comment)
     (executable
-      (comment)
       (section_type)
       (section_name)
       (property_or_conditional_block
         (indent)
         (field
           (field_name)
-          (field_value))
-        (dedent))))
-  (comment))
+          (field_value
+            (identifier)))
+        (dedent)))
+    (comment)))
 
 ================================================================================
 Properties, with multi-line values
@@ -164,40 +182,91 @@ library
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (version)))
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (identifier)
+        (identifier)
+        (identifier)
+        (boolean)
+        (identifier)
+        (identifier)))
     (field
       (field_name)
-      (field_value)
       (indent)
-      (field_value)
+      (field_value
+        (identifier)
+        (identifier)
+        (identifier)
+        (boolean)
+        (identifier)
+        (identifier))
       (dedent))
     (field
       (field_name)
-      (field_value)
+      (field_value
+        (identifier)
+        (identifier)
+        (identifier)
+        (boolean)
+        (identifier)
+        (identifier))
       (indent)
-      (field_value)
+      (field_value
+        (identifier)
+        (identifier))
       (dedent))
     (field
       (field_name)
-      (field_value)
       (indent)
-      (field_value)
-      (field_value)
+      (field_value
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier))
+      (field_value
+        (identifier)
+        (identifier))
       (dedent))
     (field
       (field_name)
-      (field_value)
+      (field_value
+        (identifier)
+        (identifier)
+        (identifier)
+        (boolean)
+        (identifier)
+        (identifier))
       (indent)
-      (field_value)
-      (field_value)
+      (field_value
+        (identifier)
+        (identifier))
+      (field_value
+        (identifier)
+        (identifier))
+      (dedent))
+    (field
+      (field_name)
+      (indent)
+      (field_value
+        (identifier)
+        (identifier)
+        (identifier)
+        (boolean)
+        (identifier)
+        (identifier))
+      (field_value
+        (identifier)
+        (identifier))
+      (field_value
+        (identifier)
+        (identifier))
       (dedent)))
   (sections
     (library
@@ -206,5 +275,6 @@ library
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (dedent)))))

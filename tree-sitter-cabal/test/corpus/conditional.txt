@@ -16,12 +16,15 @@ library
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
   (sections
     (common
       (section_type)
@@ -35,7 +38,8 @@ library
               (indent)
               (field
                 (field_name)
-                (field_value))
+                (field_value
+                  (identifier)))
               (dedent))))
         (dedent)))
     (library
@@ -49,7 +53,8 @@ library
               (indent)
               (field
                 (field_name)
-                (field_value))
+                (field_value
+                  (identifier)))
               (dedent))))
         (dedent)))))
 
@@ -75,12 +80,15 @@ test-suite foo-test
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
   (sections
     (library
       (section_type)
@@ -93,14 +101,16 @@ test-suite foo-test
               (indent)
               (field
                 (field_name)
-                (field_value))
+                (field_value
+                  (identifier)))
               (dedent)))
           (condition_else
             (property_or_conditional_block
               (indent)
               (field
                 (field_name)
-                (field_value))
+                (field_value
+                  (identifier)))
               (dedent))))
         (dedent)))
     (test_suite
@@ -115,14 +125,16 @@ test-suite foo-test
               (indent)
               (field
                 (field_name)
-                (field_value))
+                (field_value
+                  (identifier)))
               (dedent)))
           (condition_else
             (property_or_conditional_block
               (indent)
               (field
                 (field_name)
-                (field_value))
+                (field_value
+                  (identifier)))
               (dedent))))
         (dedent)))))
 
@@ -152,12 +164,15 @@ library
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
   (sections
     (common
       (section_type)
@@ -171,7 +186,8 @@ library
               (indent)
               (field
                 (field_name)
-                (field_value))
+                (field_value
+                  (identifier)))
               (dedent)))
           (condition_elseif
             (condition)
@@ -179,14 +195,16 @@ library
               (indent)
               (field
                 (field_name)
-                (field_value))
+                (field_value
+                  (identifier)))
               (dedent)))
           (condition_else
             (property_or_conditional_block
               (indent)
               (field
                 (field_name)
-                (field_value))
+                (field_value
+                  (identifier)))
               (dedent))))
         (dedent)))
     (library
@@ -200,7 +218,8 @@ library
               (indent)
               (field
                 (field_name)
-                (field_value))
+                (field_value
+                  (identifier)))
               (dedent)))
           (condition_elseif
             (condition)
@@ -208,13 +227,15 @@ library
               (indent)
               (field
                 (field_name)
-                (field_value))
+                (field_value
+                  (identifier)))
               (dedent)))
           (condition_else
             (property_or_conditional_block
               (indent)
               (field
                 (field_name)
-                (field_value))
+                (field_value
+                  (identifier)))
               (dedent))))
         (dedent)))))

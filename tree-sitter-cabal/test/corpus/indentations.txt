@@ -14,15 +14,20 @@ flag bar
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value)
+      (field_value
+        (version)))
+    (field
+      (field_name)
       (indent)
-      (field_value)
-      (field_value)
+      (field_value
+        (identifier))
+      (field_value
+        (identifier))
+      (field_value
+        (identifier))
       (dedent)))
   (sections
     (flag
@@ -32,7 +37,8 @@ flag bar
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (dedent)))))
 
 ================================================================================
@@ -52,12 +58,17 @@ executable foo
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier)
+        (identifier)
+        (identifier))))
   (sections
     (library
       (section_type)
@@ -65,9 +76,11 @@ executable foo
         (indent)
         (field
           (field_name)
-          (field_value)
+          (field_value
+            (identifier))
           (indent)
-          (field_value)
+          (field_value
+            (identifier))
           (dedent))
         (dedent)))
     (executable
@@ -77,5 +90,6 @@ executable foo
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (dedent)))))

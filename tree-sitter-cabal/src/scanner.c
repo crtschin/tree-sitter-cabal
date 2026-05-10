@@ -8,6 +8,7 @@ enum Token {
     INDENT,
     DEDENT,
     INDENTED,
+    NEWLINE,
 };
 
 typedef struct Scanner Scanner;
@@ -66,8 +67,22 @@ scanner_scan(Scanner *scanner, TSLexer *lexer, bool const *valid_symbols)
         return false;
     }
 
+    uint8_t cur_indent_lvl = *array_back(indent_lvls);
+    // prev_indent_lvl is the level current before the most recent INDENT push.
+    // A continuation line is any line more indented than prev — cabal allows
+    // the hanging-comma style where later lines are less indented than the first.
+    uint8_t prev_indent_lvl =
+        indent_lvls->size >= 2 ? *array_get(indent_lvls, indent_lvls->size - 2) : 0;
+
+    // Advance past the triggering '\n' and count the indent of the next
+    // non-blank line.  When INDENTED is valid and the comment line is still
+    // inside the value-continuation block (indent > prev_indent_lvl), we
+    // consume the comment in-scanner — the token spans it, so tree-sitter will
+    // not re-lex it as a (comment) node.  For all other comment positions we
+    // leave the '-' characters to the normal lexer (via mark_end).
     lexer->advance(lexer, true);
     uint8_t indent = 0;
+count_indent:
     while (true) {
         if (lexer->lookahead == ' ') {
             indent++;
@@ -79,28 +94,98 @@ scanner_scan(Scanner *scanner, TSLexer *lexer, bool const *valid_symbols)
             break;
         }
     }
+    // If the line starts with '--' and INDENTED is valid for this indent level,
+    // consume the comment line in-scanner and restart the indent count.
+    if (lexer->lookahead == '-' && valid_symbols[INDENTED] && indent > prev_indent_lvl) {
+        lexer->advance(lexer, true);  // past first '-'
+        if (lexer->lookahead == '-') {
+            // Confirmed comment inside a continuation block. Consume to EOL.
+            while (lexer->lookahead != '\n' && !lexer->eof(lexer)) {
+                lexer->advance(lexer, true);
+            }
+            indent = 0;
+            goto count_indent;
+        }
+        // Single '-', not a comment. Fall through with current indent.
+    }
 
-    uint8_t cur_indent_lvl = *array_back(indent_lvls);
     if (valid_symbols[INDENT] && indent > cur_indent_lvl) {
         array_push(indent_lvls, indent);
         lexer->result_symbol = INDENT;
         return true;
+    } else if (valid_symbols[INDENTED] && indent > prev_indent_lvl && indent <= cur_indent_lvl) {
+        // Continuation line still inside the value block.
+        // Accepts any indent in (prev, cur] for cabal's hanging-indent style.
+        lexer->result_symbol = INDENTED;
+        return true;
     } else if (valid_symbols[DEDENT] && indent < cur_indent_lvl) {
+        // Comment-aware: if the less-indented line begins with `--`, emit
+        // NEWLINE (or DEDENT) so the scanner token ends before `--` and the
+        // comment is lexed as an extras (comment) node on the next pass.
+        if (lexer->lookahead == '-') {
+            lexer->mark_end(lexer);
+            lexer->advance(lexer, true);
+            if (lexer->lookahead == '-') {
+                if (valid_symbols[NEWLINE]) {
+                    uint8_t lvl = cur_indent_lvl;
+                    while (indent < lvl) {
+                        array_pop(indent_lvls);
+                        lvl = *array_back(indent_lvls);
+                        scanner->pending_dedents++;
+                    }
+                    if (indent > lvl) {
+                        array_push(indent_lvls, indent);
+                    }
+                    lexer->result_symbol = NEWLINE;
+                    return true;
+                } else if (valid_symbols[DEDENT]) {
+                    while (indent < cur_indent_lvl) {
+                        array_pop(indent_lvls);
+                        cur_indent_lvl = *array_back(indent_lvls);
+                        scanner->pending_dedents++;
+                    }
+                    scanner->pending_dedents--;
+                    if (indent > cur_indent_lvl) {
+                        array_push(indent_lvls, indent);
+                    }
+                    lexer->result_symbol = DEDENT;
+                    return true;
+                }
+                return false;
+            }
+            // Single '-'. Fall through to normal DEDENT handling below.
+        }
         while (indent < cur_indent_lvl) {
             array_pop(indent_lvls);
             cur_indent_lvl = *array_back(indent_lvls);
             scanner->pending_dedents++;
         }
         scanner->pending_dedents--;
-
         if (indent > cur_indent_lvl) {
             array_push(indent_lvls, indent);
         }
-
         lexer->result_symbol = DEDENT;
         return true;
-    } else if (valid_symbols[INDENTED] && indent > 0) {
-        lexer->result_symbol = INDENTED;
+    } else if (valid_symbols[NEWLINE]) {
+        // Fallback: line break with no indent change. Emit NEWLINE to bound
+        // logical lines (e.g. between sibling fields, at top level).
+        //
+        // If the next non-blank line is less indented than `cur` but DEDENT
+        // isn't valid yet (e.g. inside a single-line field rule that needs
+        // NEWLINE first), pre-queue the dedents. Without this, the lexer has
+        // already advanced past all '\n's by the time DEDENT is valid.
+        if (indent < cur_indent_lvl) {
+            uint8_t lvl = cur_indent_lvl;
+            while (indent < lvl) {
+                array_pop(indent_lvls);
+                lvl = *array_back(indent_lvls);
+                scanner->pending_dedents++;
+            }
+            if (indent > lvl) {
+                array_push(indent_lvls, indent);
+            }
+        }
+        lexer->result_symbol = NEWLINE;
         return true;
     } else {
         return false;

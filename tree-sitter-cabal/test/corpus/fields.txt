@@ -13,12 +13,15 @@ common section
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
   (sections
     (common
       (section_type)
@@ -27,10 +30,142 @@ common section
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (field
           (field_name)
-          (field_value))
+          (indent)
+          (field_value
+            (identifier))
+          (dedent))
+        (dedent)))))
+
+================================================================================
+Comment in continuation list
+================================================================================
+
+cabal-version: 3.0
+name: pkg
+
+library
+  exposed-modules:
+    Foo.Bar
+    -- intentionally exclude Baz
+    Foo.Qux
+
+--------------------------------------------------------------------------------
+
+(cabal
+  (properties
+    (field
+      (field_name)
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
+  (sections
+    (library
+      (section_type)
+      (property_or_conditional_block
+        (indent)
+        (field
+          (field_name)
+          (indent)
+          (field_value
+            (module_name))
+          (field_value
+            (module_name))
+          (dedent))
+        (dedent)))))
+
+================================================================================
+build-depends with version constraints
+================================================================================
+
+cabal-version: 3.0
+name: pkg
+
+library
+  build-depends:
+      base >= 4.14 && < 5
+    , bytestring ^>= 0.11
+    , text
+
+--------------------------------------------------------------------------------
+
+(cabal
+  (properties
+    (field
+      (field_name)
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
+  (sections
+    (library
+      (section_type)
+      (property_or_conditional_block
+        (indent)
+        (field
+          (field_name)
+          (indent)
+          (field_value
+            (identifier)
+            (constraint_op)
+            (version)
+            (constraint_op)
+            (constraint_op)
+            (integer))
+          (field_value
+            (identifier)
+            (constraint_op)
+            (version))
+          (field_value
+            (identifier))
+          (dedent))
+        (dedent)))))
+
+================================================================================
+exposed-modules with module and bare-uppercase items
+================================================================================
+
+cabal-version: 3.0
+name: pkg
+
+library
+  exposed-modules:
+    Codec.Binary.Base16
+    Paths_pkg
+
+--------------------------------------------------------------------------------
+
+(cabal
+  (properties
+    (field
+      (field_name)
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
+  (sections
+    (library
+      (section_type)
+      (property_or_conditional_block
+        (indent)
+        (field
+          (field_name)
+          (indent)
+          (field_value
+            (module_name))
+          (field_value
+            (identifier))
+          (dedent))
         (dedent)))))
 
 ================================================================================
@@ -53,12 +188,15 @@ common section
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (version)))
+    (field
+      (field_name)
+      (field_value
+        (identifier))))
   (sections
     (common
       (section_type)
@@ -67,19 +205,28 @@ common section
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)
+            (identifier)
+            (identifier)))
         (field
           (field_name)
-          (field_value)
+          (field_value
+            (identifier))
           (indent)
-          (field_value)
-          (field_value)
+          (field_value
+            (identifier))
+          (field_value
+            (identifier))
           (dedent))
         (field
           (field_name)
-          (field_value)
           (indent)
-          (field_value)
-          (field_value)
+          (field_value
+            (identifier))
+          (field_value
+            (identifier))
+          (field_value
+            (identifier))
           (dedent))
         (dedent)))))

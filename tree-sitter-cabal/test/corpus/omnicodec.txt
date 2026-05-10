@@ -59,9 +59,11 @@ executable oenc
 --------------------------------------------------------------------------------
 
 (cabal
-  (cabal_version
-    (spec_version))
   (properties
+    (field
+      (field_name)
+      (field_value
+        (version)))
     (comment)
     (comment)
     (comment)
@@ -69,31 +71,61 @@ executable oenc
     (comment)
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (identifier)))
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (version)))
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)))
     (field
       (field_name)
-      (field_value))
+      (indent)
+      (field_value
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier)
+        (boolean)
+        (identifier)
+        (url)
+        (path))
+      (dedent))
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (identifier)))
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (identifier)
+        (identifier)
+        (constraint_op)
+        (identifier)
+        (text_fragment)))
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (identifier)))
     (field
       (field_name)
-      (field_value))
+      (field_value
+        (identifier)))
     (field
       (field_name)
-      (field_value)))
+      (field_value
+        (identifier))))
   (sections
     (source_repository
       (section_type)
@@ -102,10 +134,12 @@ executable oenc
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (url)))
         (dedent)))
     (executable
       (section_type)
@@ -114,29 +148,42 @@ executable oenc
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (flag_token)))
         (field
           (field_name)
-          (field_value)
           (indent)
-          (field_value)
-          (field_value)
-          (field_value)
-          (field_value)
-          (field_value)
+          (field_value
+            (identifier)
+            (constraint_op)
+            (integer))
+          (field_value
+            (identifier))
+          (field_value
+            (identifier))
+          (field_value
+            (identifier))
+          (field_value
+            (identifier))
+          (field_value
+            (identifier))
           (dedent))
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (dedent)))
     (executable
       (section_type)
@@ -145,27 +192,40 @@ executable oenc
         (indent)
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (flag_token)))
         (field
           (field_name)
-          (field_value)
           (indent)
-          (field_value)
-          (field_value)
-          (field_value)
-          (field_value)
-          (field_value)
+          (field_value
+            (identifier)
+            (constraint_op)
+            (integer))
+          (field_value
+            (identifier))
+          (field_value
+            (identifier))
+          (field_value
+            (identifier))
+          (field_value
+            (identifier))
+          (field_value
+            (identifier))
           (dedent))
         (field
           (field_name)
-          (field_value))
+          (field_value
+            (identifier)))
         (dedent)))))
