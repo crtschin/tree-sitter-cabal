@@ -95,13 +95,15 @@ count_indent:
         }
     }
     // Cabal comments are layout-transparent: peek past any `--` comment lines
-    // that are less indented than the current block to find the next significant
+    // whose indent differs from the current block to find the next significant
     // line's indent. Set mark_end before the first such comment so tree-sitter
-    // re-lexes it as a `comment` extras node rather than consuming it inside our
-    // layout token. Comments at indent >= cur stay in the block and are handled
-    // by tree-sitter's normal extras mechanism.
+    // re-lexes it as a `comment` extras node. Comments at indent == cur stay
+    // in the block and are handled by tree-sitter's normal extras mechanism.
+    // Both indent < cur (outdented) and indent > cur (deeper) are skipped: the
+    // latter prevents a deeply-indented trailing comment from falsely
+    // triggering INDENT for a non-existent continuation block.
     bool marked = false;
-    while (lexer->lookahead == '-' && indent < cur_indent_lvl) {
+    while (lexer->lookahead == '-' && indent != cur_indent_lvl) {
         if (!marked) {
             lexer->mark_end(lexer);
             marked = true;
@@ -114,6 +116,7 @@ count_indent:
             lexer->advance(lexer, true);
         }
         if (lexer->eof(lexer)) {
+            indent = 0;
             break;
         }
         lexer->advance(lexer, true);  // past '\n'

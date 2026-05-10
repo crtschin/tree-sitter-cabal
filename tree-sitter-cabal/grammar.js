@@ -5,13 +5,7 @@ module.exports = grammar({
 
   extras: ($) => [$.silly, $.comment, /[ \t]/],
 
-  externals: ($) => [
-    $.silly,
-    $.indent,
-    $.dedent,
-    $._indented,
-    $._newline,
-  ],
+  externals: ($) => [$.silly, $.indent, $.dedent, $._indented, $._newline],
 
   word: ($) => $.identifier,
 
@@ -98,7 +92,7 @@ module.exports = grammar({
         field("properties", $.property_or_conditional_block),
       ),
 
-    section_name: ($) => /\d*[a-zA-Z]\w*(-\d*[a-zA-Z]\w*)*/,
+    section_name: ($) => /\w*[a-zA-Z]\w*(-\w+)*/,
 
     comment: ($) => token(seq("--", /.*/)),
 

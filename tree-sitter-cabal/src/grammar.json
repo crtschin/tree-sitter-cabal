@@ -386,7 +386,7 @@
     },
     "section_name": {
       "type": "PATTERN",
-      "value": "\\d*[a-zA-Z]\\w*(-\\d*[a-zA-Z]\\w*)*"
+      "value": "\\w*[a-zA-Z]\\w*(-\\w+)*"
     },
     "comment": {
       "type": "TOKEN",
