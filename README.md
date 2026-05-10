@@ -5,7 +5,7 @@ Tree-sitter grammars for Haskell's Cabal build system.
 - **tree-sitter-cabal** — `.cabal` package description files
 - **tree-sitter-cabal-project** — `cabal.project` / `*.project` workspace files
 
-The `.cabal` grammar is forked from [magus/tree-sitter-cabal](https://gitlab.com/magus/tree-sitter-cabal/).
+The `.cabal` grammar was initially forked from [magus/tree-sitter-cabal](https://gitlab.com/magus/tree-sitter-cabal/).
 
 ## Setup
 
