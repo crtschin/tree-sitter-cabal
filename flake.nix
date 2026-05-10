@@ -2,12 +2,17 @@
   inputs = {
     nixpkgs.url = "flake:nixpkgs/nixpkgs-unstable";
     utils.url = "github:numtide/flake-utils";
+    cabal-src = {
+      url = "github:haskell/cabal";
+      flake = false;
+    };
   };
 
   outputs =
     {
       nixpkgs,
       utils,
+      cabal-src,
       ...
     }:
     utils.lib.eachDefaultSystem (
@@ -46,13 +51,14 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             haskellPackages.cabal-fmt
+            tapview
             just
             nixfmt
-            nodejs_22
             prettier
             tree-sitter
             typescript-language-server
           ];
+          env.CABAL_SRC = "${cabal-src}";
         };
       }
     );

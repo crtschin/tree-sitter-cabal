@@ -19,7 +19,6 @@ fmt mode="write": (cabal::fmt mode) (cabal-project::fmt mode)
 # Clean build artifacts in both grammars
 clean: cabal::clean cabal-project::clean
 
-# Update flake inputs and cabal submodule
-update:
-    nix flake update
-    git submodule update --remote cabal
+# Update flake inputs.
+update +args:
+  nix flake update {{args}}

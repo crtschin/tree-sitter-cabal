@@ -1,8 +1,16 @@
 default: test
 
 # Run tests for this grammar
-test:
+test: parse-corpus
     tree-sitter test
+
+# Parse every *.cabal file in the cabal submodule and fail if any has an
+# ERROR node.
+parse-corpus:
+    set -o pipefail; ../test/parse-corpus.sh \
+        --root "$CABAL_SRC" \
+        --include '*.cabal' \
+        | tapview
 
 # Generate C parser from grammar.js and build shared library
 build:
@@ -19,13 +27,7 @@ fmt mode="write":
 
 # Clean build artifacts
 clean:
-    rm -rf build/Release/*.node cabal.so
-    make clean
-
-# Open the interactive playground (requires WASM build)
-playground:
-    tree-sitter build --wasm
-    tree-sitter playground
+    rm -rf cabal.so
 
 # Parse a file and print AST
 parse file:

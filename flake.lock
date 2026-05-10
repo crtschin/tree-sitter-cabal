@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "cabal-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1778356437,
+        "narHash": "sha256-I3J8gjzaVlE+uTzmkMennZKnHFil0ZmVUjqmhyxFD2Y=",
+        "owner": "haskell",
+        "repo": "cabal",
+        "rev": "4db95b6de6e83919ab39bc208778512ec33e3f57",
+        "type": "github"
+      },
+      "original": {
+        "owner": "haskell",
+        "repo": "cabal",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1778274207,
@@ -17,6 +33,7 @@
     },
     "root": {
       "inputs": {
+        "cabal-src": "cabal-src",
         "nixpkgs": "nixpkgs",
         "utils": "utils"
       }
