@@ -1,0 +1,109 @@
+================================================================================
+If with boolean
+================================================================================
+
+if True
+  tests: True
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (conditional
+    (if_clause
+      condition: (boolean)
+      (field
+        name: (field_name)
+        value: (field_value
+          (boolean))))))
+
+================================================================================
+If with function call (no space before paren)
+================================================================================
+
+if os(linux)
+  extra-lib-dirs: /usr/lib
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (conditional
+    (if_clause
+      condition: (predicate_call
+        fn: (identifier)
+        arg: (predicate_arg
+          (identifier)))
+      (field
+        name: (field_name)
+        value: (field_value
+          (path))))))
+
+================================================================================
+Full if/elif/else chain
+================================================================================
+
+if os(linux)
+  extra-lib-dirs: /usr/lib
+elif os(windows)
+  extra-lib-dirs: /usr/local
+else
+  extra-lib-dirs: /opt/lib
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (conditional
+    (if_clause
+      condition: (predicate_call
+        fn: (identifier)
+        arg: (predicate_arg
+          (identifier)))
+      (field
+        name: (field_name)
+        value: (field_value
+          (path))))
+    (elif_clause
+      condition: (predicate_call
+        fn: (identifier)
+        arg: (predicate_arg
+          (identifier)))
+      (field
+        name: (field_name)
+        value: (field_value
+          (path))))
+    (else_clause
+      (field
+        name: (field_name)
+        value: (field_value
+          (path))))))
+
+================================================================================
+Compound predicate with and/or/not
+================================================================================
+
+if os(linux) || arch(arm) && !flag(foo)
+  ghc-options: -O1
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (conditional
+    (if_clause
+      condition: (predicate_or
+        (predicate_call
+          fn: (identifier)
+          arg: (predicate_arg
+            (identifier)))
+        (predicate_and
+          (predicate_call
+            fn: (identifier)
+            arg: (predicate_arg
+              (identifier)))
+          (predicate_not
+            (predicate_call
+              fn: (identifier)
+              arg: (predicate_arg
+                (identifier))))))
+      (field
+        name: (field_name)
+        value: (field_value
+          (flag_token))))))

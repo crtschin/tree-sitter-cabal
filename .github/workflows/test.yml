@@ -22,6 +22,6 @@ jobs:
           purge-created: 0
           purge-last-accessed: 0
           purge-primary-key: never
-      - run: nix develop --command tree-sitter test
-      - run: nix develop --command npm test
-      - run: nix develop --command prettier --check grammar.js 'test/*.js'
+      - run: nix develop --command just check
+      - run: nix develop --command just test
+      - run: nix develop --command just fmt check

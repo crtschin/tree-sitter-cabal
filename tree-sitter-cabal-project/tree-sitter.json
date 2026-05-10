@@ -1,0 +1,45 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "cabal_project",
+      "camelcase": "CabalProject",
+      "title": "CabalProject",
+      "scope": "source.cabal_project",
+      "file-types": [
+        "cabal.project.local",
+        "cabal.project",
+        "project"
+      ],
+      "injection-regex": "^cabal_project$",
+      "highlights": "queries/highlights.scm",
+      "class-name": "TreeSitterCabalProject"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "Tree sitter grammar for cabal.project files.",
+    "authors": [
+      {
+        "name": "Curtis Chin Jen Sem",
+        "email": "csochinjensem@gmail.com",
+        "url": "crtschin.com"
+      }
+    ],
+    "links": {
+      "repository": "https://github.com/crtschin/tree-sitter-cabal-project",
+      "funding": ""
+    }
+  },
+  "bindings": {
+    "c": true,
+    "go": true,
+    "java": false,
+    "node": true,
+    "python": true,
+    "rust": true,
+    "swift": true,
+    "zig": false
+  }
+}

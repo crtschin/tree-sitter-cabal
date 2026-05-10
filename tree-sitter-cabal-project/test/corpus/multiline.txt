@@ -1,0 +1,63 @@
+================================================================================
+Multi-line value starting on next line
+================================================================================
+
+packages:
+    Cabal
+  , Cabal-syntax
+  , cabal-install
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (field
+    name: (field_name)
+    value: (field_value
+      (identifier)
+      (identifier)
+      (identifier))))
+
+================================================================================
+Multi-line constraints
+================================================================================
+
+constraints: bar == 2.1,
+             bar +foo -baz
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (field
+    name: (field_name)
+    value: (field_value
+      (identifier)
+      (constraint_op)
+      (version)
+      (identifier)
+      (flag_token)
+      (flag_token))))
+
+================================================================================
+Comment inside stanza body at lower indent
+================================================================================
+
+source-repository-package
+    type: git
+-- a comment at column 0
+    location: https://github.com/haskell/cabal
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (stanza
+    header: (stanza_header
+      (keyword))
+    (field
+      name: (field_name)
+      value: (field_value
+        (identifier)))
+    (comment)
+    (field
+      name: (field_name)
+      value: (field_value
+        (url)))))

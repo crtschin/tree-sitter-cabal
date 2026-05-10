@@ -46,3 +46,4 @@ zig-out/
 *.tgz
 *.zip
 *.jar
+node_modules

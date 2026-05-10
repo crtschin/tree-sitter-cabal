@@ -1,0 +1,102 @@
+================================================================================
+Package stanza with body
+================================================================================
+
+package foo
+  ghc-options: -Wall
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (stanza
+    header: (stanza_header
+      (keyword)
+      name: (package_name))
+    (field
+      name: (field_name)
+      value: (field_value
+        (flag_token)))))
+
+================================================================================
+Package wildcard stanza
+================================================================================
+
+package *
+  optimization: 2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (stanza
+    header: (stanza_header
+      (keyword)
+      name: (package_name))
+    (field
+      name: (field_name)
+      value: (field_value
+        (integer)))))
+
+================================================================================
+Source-repository-package stanza
+================================================================================
+
+source-repository-package
+    type: git
+    location: https://github.com/haskell/cabal
+    tag: abc123
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (stanza
+    header: (stanza_header
+      (keyword))
+    (field
+      name: (field_name)
+      value: (field_value
+        (identifier)))
+    (field
+      name: (field_name)
+      value: (field_value
+        (url)))
+    (field
+      name: (field_name)
+      value: (field_value
+        (identifier)))))
+
+================================================================================
+Program-options stanza
+================================================================================
+
+program-options
+  ghc-options: -O2
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (stanza
+    header: (stanza_header
+      (keyword))
+    (field
+      name: (field_name)
+      value: (field_value
+        (flag_token)))))
+
+================================================================================
+Repository stanza with domain name
+================================================================================
+
+repository hackage.haskell.org
+  url: https://hackage.haskell.org/
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (stanza
+    header: (stanza_header
+      (keyword)
+      name: (repo_name))
+    (field
+      name: (field_name)
+      value: (field_value
+        (url)))))
