@@ -149,7 +149,7 @@ module.exports = grammar({
       token(
         prec(
           7,
-          choice("True", "False", "true", "false", "yes", "no", "on", "off"),
+          choice("True", "False"),
         ),
       ),
 

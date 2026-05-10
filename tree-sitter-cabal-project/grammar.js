@@ -95,7 +95,7 @@ export default grammar({
       token(
         prec(
           6,
-          choice("True", "False", "true", "false", "yes", "no", "on", "off"),
+          choice("True", "False"),
         ),
       ),
 
