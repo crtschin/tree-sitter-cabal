@@ -1,21 +1,21 @@
-; ---------- Comments ----------
+; comments
 (comment) @comment
 
-; ---------- Field names ----------
+; field names
 (field_name) @property
 
-; ---------- Keywords ----------
+; keywords
 (keyword) @keyword
 
 "if"   @keyword.conditional
 "elif" @keyword.conditional
 "else" @keyword.conditional
 
-; ---------- Stanza headers ----------
+; stanza headers
 (package_name) @type
 (repo_name)    @module
 
-; ---------- Literals ----------
+; literals
 (boolean)   @constant.builtin.boolean
 (integer)   @number
 (version)   @number.float
@@ -23,23 +23,21 @@
 (url)       @string.special.url
 (path)      @string.special.path
 
-; ---------- Identifiers ----------
+; identifiers
 (qualified_name) @namespace
 (flag_token)     @constant
 
-; Bare identifiers in field values (enum-like values, package names in
-; constraints, compiler tags such as `ghc-9.4.8`, …).
+; bare identifiers in field values
 (field_value (identifier) @string)
 
-; ---------- Predicates ----------
-; Builtin predicate functions: os, arch, impl, flag
+; predicates
 (predicate_call
   fn: (identifier) @function.builtin)
 
-; Identifier arguments to predicate calls (linux, x86_64, ghc, foo, …)
+; identifier arguments to predicate calls
 (predicate_arg (identifier) @variable.parameter)
 
-; Bare identifier used as a predicate atom
+; bare identifier used as a predicate atom
 (predicate_or    (identifier) @variable)
 (predicate_and   (identifier) @variable)
 (predicate_not   (identifier) @variable)
@@ -47,16 +45,16 @@
 (if_clause   condition: (identifier) @variable)
 (elif_clause condition: (identifier) @variable)
 
-; ---------- Operators ----------
+; operators
 (constraint_op) @operator
 "!"             @operator
 "||"            @operator
 "&&"            @operator
 
-; ---------- Wildcards / globs ----------
+; wildcards / globs
 "*" @character.special
 
-; ---------- Punctuation ----------
+; punctuation
 "," @punctuation.delimiter
 ":" @punctuation.delimiter
 "(" @punctuation.bracket
