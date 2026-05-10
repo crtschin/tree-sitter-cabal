@@ -94,13 +94,7 @@ export default grammar({
 
     // Tokens — declared with `token(prec(...))` for longest-match ordering.
 
-    boolean: ($) =>
-      token(
-        prec(
-          6,
-          choice("True", "False"),
-        ),
-      ),
+    boolean: ($) => token(prec(6, choice("True", "False"))),
 
     iso_date: ($) =>
       token(

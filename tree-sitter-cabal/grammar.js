@@ -148,13 +148,7 @@ module.exports = grammar({
         "!",
       ),
 
-    boolean: ($) =>
-      token(
-        prec(
-          7,
-          choice("True", "False"),
-        ),
-      ),
+    boolean: ($) => token(prec(7, choice("True", "False"))),
 
     iso_date: ($) =>
       token(
