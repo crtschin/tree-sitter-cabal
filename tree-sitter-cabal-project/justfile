@@ -1,30 +1,25 @@
 default: test
 
 # Run tests for this grammar
-test: parse-corpus
+test: parse-corpus parse-corpus-hls
     tree-sitter test
 
-# Parse every cabal.project / *.project file in the cabal submodule and
-# fail if any has an ERROR node.
+# Parse every cabal.project / *.project file in the cabal repository.
 parse-corpus:
-    set -o pipefail; ../test/parse-corpus.sh \
-        --root "$CABAL_SRC" \
-        --include '*.project' \
-        --include 'cabal.project.*' \
-        --exclude '*.hs' \
-        --exclude '*.out' \
-        --exclude '*.lock' \
-        --deny 'cabal-testsuite/PackageTests/ProjectConfig/FieldStanzaConfusion/cabal.project' \
-        | tapview
+    ../test/parse-cabal-project.sh "$CABAL_SRC"
 
-# Generate C parser from grammar.js and build shared library
+# Parse every cabal.project / *.project file in the haskell-language-server
+# repository.
+parse-corpus-hls:
+    ../test/parse-cabal-project.sh "$HLS_SRC"
+
+# Build the grammar via the nix flake (buildGrammar runs generate internally).
 build:
-    tree-sitter generate
-    tree-sitter build
+    nix build ..#tree-sitter-cabal-project
 
 # Check grammar for errors
 check:
-    tree-sitter generate
+    nix build ..#tree-sitter-cabal-project --no-link
 
 # Format the grammar file (mode: write|check)
 fmt mode="write":
@@ -32,7 +27,7 @@ fmt mode="write":
 
 # Clean build artifacts
 clean:
-    rm -rf cabal-project.so
+    rm -rf cabal-project.so result
 
 # Parse a file and print AST
 parse file:
