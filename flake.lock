@@ -16,6 +16,22 @@
         "type": "github"
       }
     },
+    "hls-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1778327701,
+        "narHash": "sha256-MHhcsrZsR2do97gle6zEw3nRfPRmpKuWhYhyd4SIBAk=",
+        "owner": "haskell",
+        "repo": "haskell-language-server",
+        "rev": "f158128ec034bec1667c440262641086bbb4d359",
+        "type": "github"
+      },
+      "original": {
+        "owner": "haskell",
+        "repo": "haskell-language-server",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1778274207,
@@ -34,6 +50,7 @@
     "root": {
       "inputs": {
         "cabal-src": "cabal-src",
+        "hls-src": "hls-src",
         "nixpkgs": "nixpkgs",
         "utils": "utils"
       }

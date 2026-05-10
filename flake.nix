@@ -6,6 +6,10 @@
       url = "github:haskell/cabal";
       flake = false;
     };
+    hls-src = {
+      url = "github:haskell/haskell-language-server";
+      flake = false;
+    };
   };
 
   outputs =
@@ -13,6 +17,7 @@
       nixpkgs,
       utils,
       cabal-src,
+      hls-src,
       ...
     }:
     utils.lib.eachDefaultSystem (
@@ -59,6 +64,7 @@
             typescript-language-server
           ];
           env.CABAL_SRC = "${cabal-src}";
+          env.HLS_SRC = "${hls-src}";
         };
       }
     );
