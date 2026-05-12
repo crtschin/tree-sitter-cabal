@@ -43,6 +43,11 @@ zig-out/
 
 result
 
+# Profiling artifacts
+*.svg
+perf.data
+perf.data.old
+
 # Archives
 *.tar.gz
 *.tgz

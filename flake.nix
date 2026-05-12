@@ -65,16 +65,23 @@
         };
 
         devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            haskellPackages.cabal-fmt
-            tapview
-            just
-            nodejs
-            nixfmt
-            prettier
-            tree-sitter
-            typescript-language-server
-          ];
+          buildInputs =
+            with pkgs;
+            [
+              haskellPackages.cabal-fmt
+              hyperfine
+              tapview
+              just
+              nodejs
+              nixfmt
+              prettier
+              tree-sitter
+              typescript-language-server
+            ]
+            ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
+              perf
+              flamegraph
+            ];
           env.CABAL_SRC = "${cabal-src}";
           env.HLS_SRC = "${hls-src}";
         };

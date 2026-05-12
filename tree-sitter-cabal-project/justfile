@@ -32,3 +32,11 @@ parse file:
 # Show syntax highlighting for a file
 highlight file:
     tree-sitter highlight {{ file }}
+
+# Profile parsing the cabal-project corpus and emit flamegraph-cabal-project.svg at the repo root.
+flamegraph:
+    ../test/flamegraph-corpus.sh cabal-project ../flamegraph-cabal-project.svg
+
+# Benchmark parsing the cabal-project corpus with hyperfine.
+bench:
+    ../test/bench-corpus.sh cabal-project

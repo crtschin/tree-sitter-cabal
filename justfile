@@ -19,6 +19,12 @@ fmt mode="write": (cabal::fmt mode) (cabal-project::fmt mode)
 # Clean build artifacts in both grammars
 clean: cabal::clean cabal-project::clean
 
+# Generate flamegraphs for both grammars.
+flamegraph: cabal::flamegraph cabal-project::flamegraph
+
+# Benchmark both grammars with hyperfine.
+bench: cabal::bench cabal-project::bench
+
 # Update flake inputs.
 update +args:
   nix flake update {{args}}
