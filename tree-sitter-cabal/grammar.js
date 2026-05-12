@@ -1,11 +1,20 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
-module.exports = grammar({
+export default grammar({
   name: "cabal",
 
-  extras: ($) => [$.silly, $.comment, /[ \t]/],
+  extras: ($) => [$.comment, /[ \t]/],
 
-  externals: ($) => [$.silly, $.indent, $.dedent, $._indented, $._newline],
+  // Order must match scanner/scanner.c's enum Token. Both _indented and
+  // _continuation are declared so the shared scanner's valid_symbols array
+  // sizes match the enum; cabal only references _indented.
+  externals: ($) => [
+    $._newline,
+    $.indent,
+    $.dedent,
+    $._indented,
+    $._continuation,
+  ],
 
   word: ($) => $.identifier,
 

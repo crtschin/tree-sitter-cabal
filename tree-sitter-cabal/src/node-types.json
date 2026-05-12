@@ -700,11 +700,6 @@
     "named": true
   },
   {
-    "type": "silly",
-    "named": true,
-    "extra": true
-  },
-  {
     "type": "spec_version",
     "named": true
   },

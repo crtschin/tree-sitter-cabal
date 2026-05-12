@@ -993,10 +993,6 @@
   "extras": [
     {
       "type": "SYMBOL",
-      "name": "silly"
-    },
-    {
-      "type": "SYMBOL",
       "name": "comment"
     },
     {
@@ -1009,7 +1005,7 @@
   "externals": [
     {
       "type": "SYMBOL",
-      "name": "silly"
+      "name": "_newline"
     },
     {
       "type": "SYMBOL",
@@ -1025,7 +1021,7 @@
     },
     {
       "type": "SYMBOL",
-      "name": "_newline"
+      "name": "_continuation"
     }
   ],
   "inline": [],

@@ -28,12 +28,23 @@
           overlays = [ ];
         };
 
+        # The per-grammar src/scanner.c is a symlink to ../../scanner/scanner.c
+        # at the repo root. Nix's import of ./${pname} doesn't reach outside
+        # that subtree, so we materialize the symlink into a real file before
+        # handing the source to buildGrammar.
         buildTreeSitterPkg =
           { pname, language }:
+          let
+            composedSrc = pkgs.runCommand "${pname}-src" { } ''
+              cp -rL ${./.}/${pname} $out
+              chmod -R +w $out
+              cp ${./scanner/scanner.c} $out/src/scanner.c
+            '';
+          in
           pkgs.tree-sitter.buildGrammar {
             inherit language;
             version = "0.1.0";
-            src = ./${pname};
+            src = composedSrc;
             generate = true;
           };
 

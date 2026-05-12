@@ -21,15 +21,18 @@ function indented_block($) {
 export default grammar({
   name: "cabal_project",
 
+  // Order must match scanner/scanner.c's enum Token. Both _indented and
+  // _continuation are declared so the shared scanner's valid_symbols array
+  // sizes match the enum; cabal-project only references _continuation.
   externals: ($) => [
     $._newline,
     $._indent,
     $._dedent,
-    $._line_continuation,
-    $._error_sentinel,
+    $._indented,
+    $._continuation,
   ],
 
-  extras: ($) => [/[ \t]/, $.comment],
+  extras: ($) => [$.comment, /[ \t]/],
 
   conflicts: ($) => [],
 
@@ -63,12 +66,12 @@ export default grammar({
 
     _word: ($) => /[A-Za-z][A-Za-z0-9_-]*/,
 
-    // A value is any non-empty sequence of value tokens and line
-    // continuations. Putting `_line_continuation` and `_value_token` in the
-    // same `repeat1` lets values start on a continuation line (e.g.
+    // A value is any non-empty sequence of value tokens and continuation
+    // tokens. Putting `_continuation` and `_value_token` in the same
+    // `repeat1` lets values start on a continuation line (e.g.
     // `packages:\n    foo\n  , bar`) and span any number of indented
     // continuation lines.
-    field_value: ($) => repeat1(choice($._value_token, $._line_continuation)),
+    field_value: ($) => repeat1(choice($._value_token, $._continuation)),
 
     _value_token: ($) =>
       choice(
@@ -151,8 +154,7 @@ export default grammar({
 
     // ---------- Stanzas ----------
 
-    stanza: ($) =>
-      seq(field("header", $.stanza_header), $._newline, indented_block($)),
+    stanza: ($) => seq(field("header", $.stanza_header), indented_block($)),
 
     stanza_header: ($) =>
       choice(
@@ -184,22 +186,12 @@ export default grammar({
       seq($.if_clause, repeat($.elif_clause), optional($.else_clause)),
 
     if_clause: ($) =>
-      seq(
-        "if",
-        field("condition", $._predicate_expr),
-        $._newline,
-        indented_block($),
-      ),
+      seq("if", field("condition", $._predicate_expr), indented_block($)),
 
     elif_clause: ($) =>
-      seq(
-        "elif",
-        field("condition", $._predicate_expr),
-        $._newline,
-        indented_block($),
-      ),
+      seq("elif", field("condition", $._predicate_expr), indented_block($)),
 
-    else_clause: ($) => seq("else", $._newline, indented_block($)),
+    else_clause: ($) => seq("else", indented_block($)),
 
     _predicate_expr: ($) =>
       choice(
