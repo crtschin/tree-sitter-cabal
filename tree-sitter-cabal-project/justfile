@@ -1,17 +1,12 @@
 default: test
 
 # Run tests for this grammar
-test: parse-corpus parse-corpus-hls
+test: parse-corpus
     tree-sitter test
 
-# Parse every cabal.project / *.project file in the cabal repository.
+# Parse every cabal.project / *.project file across the configured corpora.
 parse-corpus:
-    ../test/parse-cabal-project.sh "$CABAL_SRC"
-
-# Parse every cabal.project / *.project file in the haskell-language-server
-# repository.
-parse-corpus-hls:
-    ../test/parse-cabal-project.sh "$HLS_SRC"
+    ../test/parse-corpus.sh cabal-project | tapview
 
 # Build the grammar via the nix flake (buildGrammar runs generate internally).
 build:
