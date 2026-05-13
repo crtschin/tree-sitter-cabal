@@ -7,6 +7,8 @@ Tree-sitter grammars for Haskell's Cabal build system.
 
 The `.cabal` grammar was initially forked from [magus/tree-sitter-cabal](https://gitlab.com/magus/tree-sitter-cabal/).
 
+Disclaimer: Co-produced with a coding agent.
+
 ## Setup
 
 ```sh
