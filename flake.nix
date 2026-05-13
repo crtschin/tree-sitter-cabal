@@ -77,6 +77,8 @@
               prettier
               tree-sitter
               typescript-language-server
+              valgrind
+              kdePackages.kcachegrind
             ]
             ++ pkgs.lib.optionals pkgs.stdenv.isLinux [
               perf

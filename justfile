@@ -25,6 +25,10 @@ flamegraph: cabal::flamegraph cabal-project::flamegraph
 # Benchmark both grammars with hyperfine.
 bench: cabal::bench cabal-project::bench
 
+# Profile both grammars under valgrind (tool = callgrind | cachegrind |
+# memcheck | massif). Emits valgrind-<preset>.{out,txt} at the repo root.
+valgrind tool="callgrind": (cabal::valgrind tool) (cabal-project::valgrind tool)
+
 # Parse both corpora with scanner instrumentation enabled. Emits one
 # [scanner-stats] line per grammar on stderr.
 stats: cabal::stats cabal-project::stats

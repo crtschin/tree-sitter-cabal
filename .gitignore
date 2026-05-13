@@ -47,6 +47,8 @@ result
 *.svg
 perf.data
 perf.data.old
+valgrind*.out
+valgrind*.txt
 
 # Archives
 *.tar.gz

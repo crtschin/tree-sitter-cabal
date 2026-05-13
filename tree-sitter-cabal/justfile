@@ -41,6 +41,12 @@ flamegraph:
 bench:
     ../test/bench-corpus.sh cabal
 
+# Profile parsing the cabal corpus under valgrind (tool = callgrind |
+# cachegrind | memcheck | massif). Emits valgrind-cabal.{out,txt} at the
+# repo root.
+valgrind tool="callgrind":
+    ../test/valgrind-corpus.sh cabal ../valgrind-cabal --tool={{ tool }}
+
 # Parse the corpus with -DSCANNER_STATS so the scanner emits a one-line
 # [scanner-stats] call-rate report on stderr. Uses `tree-sitter parse
 # --rebuild` to force a fresh compile with the flag, then a second --rebuild
