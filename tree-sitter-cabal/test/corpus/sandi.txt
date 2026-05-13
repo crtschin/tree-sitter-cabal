@@ -194,7 +194,8 @@ benchmark sandi-bench
       (field_name)
       (indent)
       (field_value
-        (path))
+        (identifier)
+        (text_fragment))
       (field_value
         (identifier))
       (dedent)))
@@ -272,7 +273,8 @@ benchmark sandi-bench
         (field
           (field_name)
           (field_value
-            (path)))
+            (identifier)
+            (text_fragment)))
         (field
           (field_name)
           (indent)

@@ -312,10 +312,6 @@
           "named": true
         },
         {
-          "type": "path",
-          "named": true
-        },
-        {
           "type": "qualified_name",
           "named": true
         },
@@ -721,10 +717,6 @@
   },
   {
     "type": "module_name",
-    "named": true
-  },
-  {
-    "type": "path",
     "named": true
   },
   {

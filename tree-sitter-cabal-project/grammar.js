@@ -21,15 +21,20 @@ function indented_block($) {
 export default grammar({
   name: "cabal_project",
 
-  // Order must match scanner/scanner.c's enum Token. Both _indented and
-  // _continuation are declared so the shared scanner's valid_symbols array
-  // sizes match the enum; cabal-project only references _continuation.
+  // Order must match scanner/scanner.c's enum Token. _indented,
+  // _section_name_pad, and _field_name_pad are declared so the shared
+  // scanner's valid_symbols array size matches its enum; cabal-project
+  // only references _newline, _indent, _dedent, _continuation. The
+  // scanner's Unicode-fallback for SECTION_NAME / FIELD_NAME is gated on
+  // valid_symbols[*], which the parser never sets for these padding slots.
   externals: ($) => [
     $._newline,
     $._indent,
     $._dedent,
     $._indented,
     $._continuation,
+    $._section_name_pad,
+    $._field_name_pad,
   ],
 
   extras: ($) => [$.comment, /[ \t]/],

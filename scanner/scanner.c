@@ -109,10 +109,12 @@ static void stats_dump(void) {
 // Cabal-syntax uses one lexer for both file formats. The .cabal vs .project distinction
 // is purely semantic.
 //
-// ABI constraint: both grammars must list all five tokens in this exact order in their
+// ABI constraint: both grammars must list all seven tokens in this exact order in their
 // `externals` arrays. Tree-sitter sizes valid_symbols by the count of declared externals,
 // indexed by position. Removing or reordering an entry shifts subsequent indices and
-// causes out-of-bounds reads in scanner_scan.
+// causes out-of-bounds reads in scanner_scan. Cabal references section_name and
+// field_name in its rules; cabal-project pads those positions with unused symbols
+// (_section_name_pad, _field_name_pad) so the enum stays aligned.
 //
 // Indentation is measured in spaces. Blank lines reset the count to zero and are
 // skipped.
@@ -160,6 +162,10 @@ enum Token {
     DEDENT,
     INDENTED,
     CONTINUATION,
+    // Names. ASCII fast path + Unicode fallback. Only the cabal grammar
+    // references these; cabal-project pads the slots with unused externals.
+    SECTION_NAME,
+    FIELD_NAME,
 };
 
 typedef struct {
@@ -194,6 +200,22 @@ static void scanner_destroy(void *payload) {
     Scanner *scanner = (Scanner *)payload;
     array_delete(&scanner->indents);
     ts_free(scanner);
+}
+
+// Name-character predicates used by the section_name / field_name dispatch
+// in scanner_scan. The four ASCII clauses are the hot path; `>= 0x80` is
+// what lets Unicode names parse without paying the DFA-bloat cost of a
+// Unicode regex (see the comment block on the dispatch itself).
+static inline bool is_name_start(int32_t c) {
+    return (c >= 'a' && c <= 'z')
+        || (c >= 'A' && c <= 'Z')
+        || (c >= '0' && c <= '9')
+        || c == '_'
+        || c >= 0x80;
+}
+
+static inline bool is_name_cont(int32_t c) {
+    return is_name_start(c) || c == '-';
 }
 
 // Advance past spaces and blank lines and return the column of the next significant
@@ -342,6 +364,50 @@ static bool scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbol
         scanner->eof_newline_emitted = true;
         lexer->result_symbol = NEWLINE;
         STATS_PATH(SP_EOF_NEWLINE); return true;
+    }
+
+    // Name dispatch. Implements an ASCII-fast / Unicode-fallback split:
+    //
+    //   - section_name and field_name are listed in `externals` *and* have
+    //     ASCII-only regex rules in grammar.js. Tree-sitter wires this into
+    //     scanner-first / DFA-fallback: scanner returns false → DFA tries.
+    //   - For ASCII names we return false here. The DFA matches via the
+    //     regex, and literal precedence still lets keywords like `library`,
+    //     `if`, `source-repository` beat the field_name regex at section-
+    //     header positions. Emitting unconditionally would steal those.
+    //   - For Unicode names we must commit, because the DFA's ASCII regex
+    //     would stop at the first byte ≥ 0x80 and the parser would error.
+    //     Unicode can sit anywhere in the name (`x-無`, `Fünfstück`), so we
+    //     have to walk the whole body to know whether to commit. The wasted
+    //     advances on pure-ASCII names cost ~17M Ir on the cabal corpus;
+    //     the DFA savings from dropping the Unicode range are ~105M Ir.
+    //
+    // `lookahead` is the codepoint, pre-decoded from UTF-8 by tree-sitter,
+    // so the `>= 0x80` check in is_name_start covers any non-ASCII char in
+    // a single integer compare.
+    //
+    // Cabal-project's externals pad these slots with unused symbols, so
+    // both valid_symbols are always false there and the block is dead.
+    if (valid_symbols[SECTION_NAME] || valid_symbols[FIELD_NAME]) {
+        while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+               lexer->lookahead == '\r' || lexer->lookahead == 0x00A0) {
+            lexer->advance(lexer, true);
+        }
+        if (is_name_start(lexer->lookahead)) {
+            bool has_unicode = (lexer->lookahead >= 0x80);
+            lexer->advance(lexer, false);
+            while (is_name_cont(lexer->lookahead)) {
+                if (lexer->lookahead >= 0x80) has_unicode = true;
+                lexer->advance(lexer, false);
+            }
+            if (has_unicode) {
+                lexer->mark_end(lexer);
+                lexer->result_symbol =
+                    valid_symbols[FIELD_NAME] ? FIELD_NAME : SECTION_NAME;
+                return true;
+            }
+            return false;  // ASCII: relinquish to DFA + keyword extraction.
+        }
     }
     // Skip leading horizontal whitespace and \r so trailing spaces before a line
     // ending don't block NEWLINE/DEDENT detection. Tree-sitter calls the external

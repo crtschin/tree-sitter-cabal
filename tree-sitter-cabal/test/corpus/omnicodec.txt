@@ -98,7 +98,7 @@ executable oenc
         (identifier)
         (identifier)
         (url)
-        (path))
+        (text_fragment))
       (dedent))
     (field
       (field_name)

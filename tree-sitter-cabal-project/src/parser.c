@@ -9,10 +9,10 @@
 #define LANGUAGE_VERSION 15
 #define STATE_COUNT 126
 #define LARGE_STATE_COUNT 2
-#define SYMBOL_COUNT 71
+#define SYMBOL_COUNT 73
 #define ALIAS_COUNT 1
-#define TOKEN_COUNT 38
-#define EXTERNAL_TOKEN_COUNT 5
+#define TOKEN_COUNT 40
+#define EXTERNAL_TOKEN_COUNT 7
 #define FIELD_COUNT 8
 #define MAX_ALIAS_SEQUENCE_LENGTH 5
 #define MAX_RESERVED_WORD_SET_SIZE 0
@@ -57,40 +57,42 @@ enum ts_symbol_identifiers {
   sym__dedent = 35,
   sym__indented = 36,
   sym__continuation = 37,
-  sym_source_file = 38,
-  sym__top_item = 39,
-  sym__block_item = 40,
-  sym_field = 41,
-  sym_field_name = 42,
-  sym_field_value = 43,
-  sym__value_token = 44,
-  sym_qualified_name = 45,
-  sym_stanza = 46,
-  sym_stanza_header = 47,
-  sym__package_header = 48,
-  sym__repository_header = 49,
-  sym__source_repository_package_header = 50,
-  sym__program_options_header = 51,
-  sym__program_locations_header = 52,
-  sym_package_name = 53,
-  sym_conditional = 54,
-  sym_if_clause = 55,
-  sym_elif_clause = 56,
-  sym_else_clause = 57,
-  sym__predicate_expr = 58,
-  sym_predicate_or = 59,
-  sym_predicate_and = 60,
-  sym_predicate_not = 61,
-  sym__predicate_atom = 62,
-  sym_predicate_paren = 63,
-  sym_predicate_call = 64,
-  sym_predicate_arg = 65,
-  aux_sym_source_file_repeat1 = 66,
-  aux_sym_field_value_repeat1 = 67,
-  aux_sym_stanza_repeat1 = 68,
-  aux_sym_conditional_repeat1 = 69,
-  aux_sym_predicate_arg_repeat1 = 70,
-  alias_sym_sublibrary_name = 71,
+  sym__section_name_pad = 38,
+  sym__field_name_pad = 39,
+  sym_source_file = 40,
+  sym__top_item = 41,
+  sym__block_item = 42,
+  sym_field = 43,
+  sym_field_name = 44,
+  sym_field_value = 45,
+  sym__value_token = 46,
+  sym_qualified_name = 47,
+  sym_stanza = 48,
+  sym_stanza_header = 49,
+  sym__package_header = 50,
+  sym__repository_header = 51,
+  sym__source_repository_package_header = 52,
+  sym__program_options_header = 53,
+  sym__program_locations_header = 54,
+  sym_package_name = 55,
+  sym_conditional = 56,
+  sym_if_clause = 57,
+  sym_elif_clause = 58,
+  sym_else_clause = 59,
+  sym__predicate_expr = 60,
+  sym_predicate_or = 61,
+  sym_predicate_and = 62,
+  sym_predicate_not = 63,
+  sym__predicate_atom = 64,
+  sym_predicate_paren = 65,
+  sym_predicate_call = 66,
+  sym_predicate_arg = 67,
+  aux_sym_source_file_repeat1 = 68,
+  aux_sym_field_value_repeat1 = 69,
+  aux_sym_stanza_repeat1 = 70,
+  aux_sym_conditional_repeat1 = 71,
+  aux_sym_predicate_arg_repeat1 = 72,
+  alias_sym_sublibrary_name = 73,
 };
 
 static const char * const ts_symbol_names[] = {
@@ -132,6 +134,8 @@ static const char * const ts_symbol_names[] = {
   [sym__dedent] = "_dedent",
   [sym__indented] = "_indented",
   [sym__continuation] = "_continuation",
+  [sym__section_name_pad] = "_section_name_pad",
+  [sym__field_name_pad] = "_field_name_pad",
   [sym_source_file] = "source_file",
   [sym__top_item] = "_top_item",
   [sym__block_item] = "_block_item",
@@ -207,6 +211,8 @@ static const TSSymbol ts_symbol_map[] = {
   [sym__dedent] = sym__dedent,
   [sym__indented] = sym__indented,
   [sym__continuation] = sym__continuation,
+  [sym__section_name_pad] = sym__section_name_pad,
+  [sym__field_name_pad] = sym__field_name_pad,
   [sym_source_file] = sym_source_file,
   [sym__top_item] = sym__top_item,
   [sym__block_item] = sym__block_item,
@@ -393,6 +399,14 @@ static const TSSymbolMetadata ts_symbol_metadata[] = {
     .named = true,
   },
   [sym__continuation] = {
+    .visible = false,
+    .named = true,
+  },
+  [sym__section_name_pad] = {
+    .visible = false,
+    .named = true,
+  },
+  [sym__field_name_pad] = {
     .visible = false,
     .named = true,
   },
@@ -1773,6 +1787,8 @@ static const uint16_t ts_parse_table[LARGE_STATE_COUNT][SYMBOL_COUNT] = {
     [sym__dedent] = ACTIONS(1),
     [sym__indented] = ACTIONS(1),
     [sym__continuation] = ACTIONS(1),
+    [sym__section_name_pad] = ACTIONS(1),
+    [sym__field_name_pad] = ACTIONS(1),
   },
   [STATE(1)] = {
     [sym_source_file] = STATE(116),
@@ -4131,6 +4147,8 @@ enum ts_external_scanner_symbol_identifiers {
   ts_external_token__dedent = 2,
   ts_external_token__indented = 3,
   ts_external_token__continuation = 4,
+  ts_external_token__section_name_pad = 5,
+  ts_external_token__field_name_pad = 6,
 };
 
 static const TSSymbol ts_external_scanner_symbol_map[EXTERNAL_TOKEN_COUNT] = {
@@ -4139,6 +4157,8 @@ static const TSSymbol ts_external_scanner_symbol_map[EXTERNAL_TOKEN_COUNT] = {
   [ts_external_token__dedent] = sym__dedent,
   [ts_external_token__indented] = sym__indented,
   [ts_external_token__continuation] = sym__continuation,
+  [ts_external_token__section_name_pad] = sym__section_name_pad,
+  [ts_external_token__field_name_pad] = sym__field_name_pad,
 };
 
 static const bool ts_external_scanner_states[7][EXTERNAL_TOKEN_COUNT] = {
@@ -4148,6 +4168,8 @@ static const bool ts_external_scanner_states[7][EXTERNAL_TOKEN_COUNT] = {
     [ts_external_token__dedent] = true,
     [ts_external_token__indented] = true,
     [ts_external_token__continuation] = true,
+    [ts_external_token__section_name_pad] = true,
+    [ts_external_token__field_name_pad] = true,
   },
   [2] = {
     [ts_external_token__newline] = true,

@@ -961,6 +961,14 @@
     {
       "type": "SYMBOL",
       "name": "_continuation"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_section_name_pad"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_field_name_pad"
     }
   ],
   "inline": [],

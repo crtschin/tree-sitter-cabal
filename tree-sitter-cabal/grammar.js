@@ -29,9 +29,16 @@ export default grammar({
     $.dedent,
     $._indented,
     $._continuation,
+    $.section_name,
+    $.field_name,
   ],
 
   word: ($) => $.identifier,
+
+  // Flatten the 23-alternative _value_token wrapper rule into its callsite
+  // (field_value). The wrapper is hidden anyway; inlining shrinks the parse
+  // table without altering the AST.
+  inline: ($) => [$._value_token],
 
   // Optional empty bodies on condition_if / condition_elseif make `else`/`elif` reachable
   // both as continuation of the current conditional and as the start of an outer one.
@@ -51,7 +58,7 @@ export default grammar({
 
     // Matches the modern bare version (3.0), the old range prefix (>= 1.8),
     // and the old -any / -none forms used before cabal-version was meaningful.
-    spec_version: ($) => /(>=?\s*)?\d+\.\d+(\.\d+)*(\.\*)?\s*\n|[+\-]any\s*\n/,
+    spec_version: ($) => /(>=?\s*)?\d+\.\d+(\.\d+)*(\.\*)?|[+\-]any/,
 
     properties: ($) => repeat1(seq($.field, repeat($._newline))),
 
@@ -135,7 +142,13 @@ export default grammar({
         optional(field("properties", $.property_or_conditional_block)),
       ),
 
-    section_name: ($) => /[\w-￿]*[a-zA-Z-￿][\w-￿]*(-[\w-￿]+)*/,
+    // ASCII fast path. Listed in externals; the scanner intercepts only when
+    // the name contains non-ASCII bytes (rare Unicode-named fields like
+    // `x-field-ä`). For all-ASCII names, the scanner returns false and this
+    // regex matches — keyword extraction then prefers section_type keywords
+    // (`library`, `if`, etc.) over the field_name regex via the standard
+    // word-token machinery.
+    section_name: ($) => /\w*[a-zA-Z]\w*(-\w+)*/,
 
     comment: ($) => token(seq("--", /.*/)),
 
@@ -164,7 +177,7 @@ export default grammar({
         ),
       ),
 
-    field_name: ($) => /[\w-￿]([\w-￿]|-)+/,
+    field_name: ($) => /\w(\w|-)+/,
 
     field_value: ($) => repeat1($._value_token),
 
@@ -178,7 +191,6 @@ export default grammar({
         $.qualified_name,
         $.flag_token,
         $.integer,
-        $.path,
         $.identifier,
         $.quoted_string,
         $.text_fragment,
@@ -238,18 +250,6 @@ export default grammar({
     integer: ($) => token(prec(2, /[0-9]+/)),
 
     identifier: ($) => token(prec(1, /[A-Za-z_][A-Za-z0-9_.\-]*/)),
-
-    path: ($) =>
-      token(
-        prec(
-          1,
-          choice(
-            /\/[A-Za-z0-9_*?.\-\/]+/,
-            /\.\.?(\/[A-Za-z0-9_*?.\-\/]*)?/,
-            /[A-Za-z0-9_.\-]+\/[A-Za-z0-9_*?.\-\/]*/,
-          ),
-        ),
-      ),
 
     constraint_op: ($) =>
       token(choice("==", ">=", "<=", "<", ">", "^>=", "&&", "||")),
