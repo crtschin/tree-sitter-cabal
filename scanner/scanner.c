@@ -58,6 +58,12 @@ typedef struct {
     // line is already less indented, it pre-pops the stack and stores the deficit here.
     // Each subsequent call for DEDENT drains one count and returns without advancing.
     uint16_t pending_dedents;
+    // True once we've emitted the implicit NEWLINE at EOF. Files without a trailing
+    // newline need one virtual NEWLINE so the last field/line can close, but the
+    // scanner cannot advance the lexer past EOF, so firing NEWLINE unconditionally
+    // would loop whenever the grammar sits in repeat($._newline). Once set, only the
+    // DEDENT-at-EOF path is allowed to fire on subsequent calls.
+    bool eof_newline_emitted;
 } Scanner;
 
 static void *scanner_create(void) {
@@ -65,6 +71,7 @@ static void *scanner_create(void) {
     array_init(&scanner->indents);
     array_push(&scanner->indents, 0);
     scanner->pending_dedents = 0;
+    scanner->eof_newline_emitted = false;
     return scanner;
 }
 
@@ -76,14 +83,21 @@ static void scanner_destroy(void *payload) {
 
 // Advance past spaces and blank lines and return the column of the next significant
 // character. Tabs stop the count (lookahead 0 at EOF also exits the loop naturally).
+// \r is skipped silently so CRLF files behave identically to LF files.
 static uint16_t consume_blanks(TSLexer *lexer) {
     uint16_t indent = 0;
     while (true) {
-        if (lexer->lookahead == ' ') {
+        if (lexer->lookahead == ' ' || lexer->lookahead == 0x00A0 /* nbsp */) {
             indent++;
+            lexer->advance(lexer, true);
+        } else if (lexer->lookahead == '\t') {
+            // Advance to the next 8-space tab stop.
+            indent = (uint16_t)((indent + 8) & ~(uint16_t)7);
             lexer->advance(lexer, true);
         } else if (lexer->lookahead == '\n') {
             indent = 0;
+            lexer->advance(lexer, true);
+        } else if (lexer->lookahead == '\r') {
             lexer->advance(lexer, true);
         } else {
             break;
@@ -96,10 +110,10 @@ static uint16_t consume_blanks(TSLexer *lexer) {
 // All multi-byte values are packed little-endian because the buffer has no alignment
 // guarantee.
 //
-// Layout: [pending lo][pending hi][stack_size lo][stack_size hi]
+// Layout: [pending lo][pending hi][stack_size lo][stack_size hi][eof_flag]
 //         [col[0] lo][col[0] hi] ... one pair per stack entry, up to the buffer limit.
 //
-// The 4-byte header is always written first. TREE_SITTER_SERIALIZATION_BUFFER_SIZE is
+// The 5-byte header is always written first. TREE_SITTER_SERIALIZATION_BUFFER_SIZE is
 // 1024, so the header fits without a bounds check. Stack entries are guarded one by one.
 static unsigned scanner_serialize(void *payload, char *buffer) {
     Scanner *scanner = (Scanner *)payload;
@@ -111,6 +125,8 @@ static unsigned scanner_serialize(void *payload, char *buffer) {
     uint16_t stack_size = (uint16_t)scanner->indents.size;
     buffer[size++] = (char)(stack_size & 0xFF);
     buffer[size++] = (char)((stack_size >> 8) & 0xFF);
+
+    buffer[size++] = (char)(scanner->eof_newline_emitted ? 1 : 0);
 
     for (uint32_t i = 0; i < scanner->indents.size; i++) {
         uint16_t v = *array_get(&scanner->indents, i);
@@ -131,6 +147,7 @@ static void scanner_deserialize(void *payload, const char *buffer, unsigned leng
     Scanner *scanner = (Scanner *)payload;
     array_clear(&scanner->indents);
     scanner->pending_dedents = 0;
+    scanner->eof_newline_emitted = false;
 
     if (length == 0) {
         array_push(&scanner->indents, 0);
@@ -144,6 +161,10 @@ static void scanner_deserialize(void *payload, const char *buffer, unsigned leng
 
     uint16_t stack_size = (uint8_t)buffer[pos++];
     stack_size |= ((uint16_t)(uint8_t)buffer[pos++]) << 8;
+
+    if (pos < length) {
+        scanner->eof_newline_emitted = buffer[pos++] != 0;
+    }
 
     for (uint16_t i = 0; i < stack_size && pos + 1 < length; i++) {
         uint16_t v = (uint8_t)buffer[pos++];
@@ -173,6 +194,22 @@ static bool scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbol
         lexer->result_symbol = DEDENT;
         return true;
     }
+    // Latches once so the grammar's repeat($._newline) cannot loop on the virtual
+    // NEWLINE. See eof_newline_emitted in the Scanner struct.
+    if (valid_symbols[NEWLINE] && lexer->eof(lexer) &&
+        !scanner->eof_newline_emitted) {
+        scanner->eof_newline_emitted = true;
+        lexer->result_symbol = NEWLINE;
+        return true;
+    }
+    // Skip leading horizontal whitespace and \r so trailing spaces before a line
+    // ending don't block NEWLINE/DEDENT detection. Tree-sitter calls the external
+    // scanner before consuming extras, so if the lexer sits on a trailing space the
+    // scanner would otherwise see ' ' as the lookahead and return false.
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+           lexer->lookahead == '\r' || lexer->lookahead == 0x00A0) {
+        lexer->advance(lexer, true);
+    }
     if (lexer->eof(lexer) || lexer->lookahead != '\n') {
         return false;
     }
@@ -195,19 +232,14 @@ static bool scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbol
     // real line's indent, calling mark_end before the first comment so the scanner
     // token ends there. Tree-sitter then re-lexes the comment as an extras node.
     //
-    // We skip comments only when they are at a different indent than cur (indent !=
-    // cur_indent_lvl) or when only_indent is true. Comments at exactly cur can be left
-    // to the extras mechanism under normal conditions.
-    //
-    // only_indent is true immediately after a block header, before the body opens.
-    // In that state INDENT is the only valid layout token. A comment at the header's
-    // column must be skipped so a deeper body can still produce INDENT. Once a block
-    // is open, DEDENT and NEWLINE become valid too and only_indent becomes false.
-    bool only_indent = valid_symbols[INDENT] && !valid_symbols[DEDENT] &&
-                       !valid_symbols[NEWLINE] && !valid_symbols[INDENTED] &&
-                       !valid_symbols[CONTINUATION];
+    // pre_block: between a block header and its yet-unopened body, GLR also reduces
+    // the empty-body path so both INDENT and DEDENT are valid. In that state a
+    // header-column comment must be skipped so a deeper body line behind it can still
+    // produce INDENT. Inside an unclosed field only INDENT is valid, so pre_block
+    // flips false and same-indent comments are left to the extras mechanism.
+    bool pre_block = valid_symbols[INDENT] && valid_symbols[DEDENT];
     bool marked = false;
-    while (lexer->lookahead == '-' && (indent != cur_indent_lvl || only_indent)) {
+    while (lexer->lookahead == '-' && (indent != cur_indent_lvl || pre_block)) {
         if (!marked) {
             lexer->mark_end(lexer);
             marked = true;

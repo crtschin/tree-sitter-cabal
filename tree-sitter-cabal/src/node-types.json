@@ -15,10 +15,10 @@
       },
       "properties": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
-            "type": "property_block",
+            "type": "property_or_conditional_block",
             "named": true
           }
         ]
@@ -42,7 +42,7 @@
     "fields": {},
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
       "types": [
         {
           "type": "cabal_version",
@@ -90,7 +90,7 @@
       },
       "properties": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "property_or_conditional_block",
@@ -187,6 +187,32 @@
     }
   },
   {
+    "type": "custom_setup",
+    "named": true,
+    "fields": {
+      "properties": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "property_block",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "section_type",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "executable",
     "named": true,
     "fields": {
@@ -202,7 +228,7 @@
       },
       "properties": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "property_or_conditional_block",
@@ -328,10 +354,46 @@
       },
       "properties": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "property_block",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "section_type",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "foreign_library",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "section_name",
+            "named": true
+          }
+        ]
+      },
+      "properties": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "property_or_conditional_block",
             "named": true
           }
         ]
@@ -364,7 +426,7 @@
       },
       "properties": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "property_or_conditional_block",
@@ -450,32 +512,6 @@
     }
   },
   {
-    "type": "qualified_name",
-    "named": true,
-    "fields": {
-      "package": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "package_name",
-            "named": true
-          }
-        ]
-      },
-      "sublibrary": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "sublibrary_name",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "type": "sections",
     "named": true,
     "fields": {},
@@ -492,11 +528,19 @@
           "named": true
         },
         {
+          "type": "custom_setup",
+          "named": true
+        },
+        {
           "type": "executable",
           "named": true
         },
         {
           "type": "flag",
+          "named": true
+        },
+        {
+          "type": "foreign_library",
           "named": true
         },
         {
@@ -530,7 +574,7 @@
       },
       "properties": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "property_block",
@@ -566,7 +610,7 @@
       },
       "properties": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "property_or_conditional_block",
@@ -588,6 +632,10 @@
   },
   {
     "type": "!",
+    "named": false
+  },
+  {
+    "type": "\"",
     "named": false
   },
   {
@@ -619,10 +667,6 @@
     "named": true
   },
   {
-    "type": "cabal-version",
-    "named": false
-  },
-  {
     "type": "comment",
     "named": true,
     "extra": true
@@ -640,11 +684,11 @@
     "named": true
   },
   {
-    "type": "else",
+    "type": "elif",
     "named": false
   },
   {
-    "type": "elseif",
+    "type": "else",
     "named": false
   },
   {
@@ -680,11 +724,11 @@
     "named": true
   },
   {
-    "type": "package_name",
+    "type": "path",
     "named": true
   },
   {
-    "type": "path",
+    "type": "qualified_name",
     "named": true
   },
   {
@@ -701,10 +745,6 @@
   },
   {
     "type": "spec_version",
-    "named": true
-  },
-  {
-    "type": "sublibrary_name",
     "named": true
   },
   {

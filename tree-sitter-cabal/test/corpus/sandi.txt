@@ -403,7 +403,7 @@ benchmark sandi-bench
     (benchmark
       (section_type)
       (section_name)
-      (property_block
+      (property_or_conditional_block
         (indent)
         (field
           (field_name)

@@ -1,13 +1,26 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
+
+// Build a case-insensitive regex for a keyword. Each ASCII letter becomes
+// [aA], each non-letter (hyphen, digit) is kept as-is.
+function ci(str) {
+  return new RegExp(
+    str
+      .split("")
+      .map((c) => (/[a-zA-Z]/.test(c) ? `[${c.toLowerCase()}${c.toUpperCase()}]` : c))
+      .join(""),
+  );
+}
+
 export default grammar({
   name: "cabal",
 
-  extras: ($) => [$.comment, /[ \t]/],
+  // U+00A0 (non-breaking space) appears in some old cabal files. Treat it as whitespace.
+  extras: ($) => [$.comment, /[ \t\r ]/],
 
   // Order must match scanner/scanner.c's enum Token. Both _indented and
   // _continuation are declared so the shared scanner's valid_symbols array
-  // sizes match the enum; cabal only references _indented.
+  // sizes match the enum. Cabal only references _indented.
   externals: ($) => [
     $._newline,
     $.indent,
@@ -18,21 +31,26 @@ export default grammar({
 
   word: ($) => $.identifier,
 
-  conflicts: ($) => [],
+  // Optional empty bodies on condition_if / condition_elseif make `else`/`elif` reachable
+  // both as continuation of the current conditional and as the start of an outer one.
+  conflicts: ($) => [[$.conditional]],
 
   rules: {
     cabal: ($) =>
       seq(
         optional($.cabal_version),
         repeat($._newline),
-        $.properties,
+        optional($.properties),
         optional($.sections),
       ),
 
     cabal_version: ($) =>
-      seq(repeat($._newline), "cabal-version", ":", $.spec_version),
+      seq(repeat($._newline), ci("cabal-version"), ":", $.spec_version),
 
-    spec_version: ($) => /\d+\.\d+(\.\d+)?\s*\n/,
+    // Matches the modern bare version (3.0), the old range prefix (>= 1.8),
+    // and the old -any / -none forms used before cabal-version was meaningful.
+    spec_version: ($) =>
+      /(>=?\s*)?\d+\.\d+(\.\d+)*(\.\*)?\s*\n|[+\-]any\s*\n/,
 
     properties: ($) => repeat1(seq($.field, repeat($._newline))),
 
@@ -42,8 +60,10 @@ export default grammar({
           choice(
             $.benchmark,
             $.common,
+            $.custom_setup,
             $.executable,
             $.flag,
+            $.foreign_library,
             $.library,
             $.source_repository,
             $.test_suite,
@@ -54,54 +74,67 @@ export default grammar({
 
     benchmark: ($) =>
       seq(
-        field("type", alias("benchmark", $.section_type)),
+        field("type", alias(ci("benchmark"), $.section_type)),
         field("name", $.section_name),
-        field("properties", $.property_block),
+        optional(field("properties", $.property_or_conditional_block)),
       ),
 
     common: ($) =>
       seq(
-        field("type", alias("common", $.section_type)),
+        field("type", alias(ci("common"), $.section_type)),
         field("name", $.section_name),
-        field("properties", $.property_or_conditional_block),
+        optional(field("properties", $.property_or_conditional_block)),
+      ),
+
+    custom_setup: ($) =>
+      seq(
+        field("type", alias(ci("custom-setup"), $.section_type)),
+        optional(field("properties", $.property_block)),
       ),
 
     executable: ($) =>
       seq(
-        field("type", alias("executable", $.section_type)),
+        field("type", alias(ci("executable"), $.section_type)),
         field("name", $.section_name),
-        field("properties", $.property_or_conditional_block),
+        optional(field("properties", $.property_or_conditional_block)),
       ),
 
     flag: ($) =>
       seq(
-        field("type", alias("flag", $.section_type)),
+        field("type", alias(ci("flag"), $.section_type)),
         field("name", $.section_name),
-        field("properties", $.property_block),
+        optional(field("properties", $.property_block)),
+      ),
+
+    foreign_library: ($) =>
+      seq(
+        field("type", alias(ci("foreign-library"), $.section_type)),
+        field("name", $.section_name),
+        optional(field("properties", $.property_or_conditional_block)),
       ),
 
     library: ($) =>
       seq(
-        field("type", alias("library", $.section_type)),
+        field("type", alias(ci("library"), $.section_type)),
         optional(field("name", $.section_name)),
-        field("properties", $.property_or_conditional_block),
+        optional(field("properties", $.property_or_conditional_block)),
       ),
 
     source_repository: ($) =>
       seq(
-        field("type", alias("source-repository", $.section_type)),
+        field("type", alias(ci("source-repository"), $.section_type)),
         field("name", $.section_name),
-        field("properties", $.property_block),
+        optional(field("properties", $.property_block)),
       ),
 
     test_suite: ($) =>
       seq(
-        field("type", alias("test-suite", $.section_type)),
+        field("type", alias(ci("test-suite"), $.section_type)),
         field("name", $.section_name),
-        field("properties", $.property_or_conditional_block),
+        optional(field("properties", $.property_or_conditional_block)),
       ),
 
-    section_name: ($) => /\w*[a-zA-Z]\w*(-\w+)*/,
+    section_name: ($) => /[\w-￿]*[a-zA-Z-￿][\w-￿]*(-[\w-￿]+)*/,
 
     comment: ($) => token(seq("--", /.*/)),
 
@@ -122,14 +155,15 @@ export default grammar({
           seq(
             optional($.field_value),
             $.indent,
-            $.field_value,
-            repeat(seq(repeat1($._indented), $.field_value)),
+            // field_value is optional on every line so comment-only lines parse cleanly.
+            optional($.field_value),
+            repeat(seq($._indented, optional($.field_value))),
             $.dedent,
           ),
         ),
       ),
 
-    field_name: ($) => /\w(\w|-)+/,
+    field_name: ($) => /[\w-￿]([\w-￿]|-)+/,
 
     field_value: ($) => repeat1($._value_token),
 
@@ -156,6 +190,8 @@ export default grammar({
         "}",
         "=",
         "!",
+        ":",
+        "\"",
       ),
 
     boolean: ($) => token(prec(7, choice("True", "False"))),
@@ -173,17 +209,24 @@ export default grammar({
     module_name: ($) =>
       token(prec(5, /[A-Z][A-Za-z0-9_']*(\.[A-Z][A-Za-z0-9_']*)+/)),
 
+    // Atomic token. Rejects the colon entirely when it isn't followed by a valid
+    // sublibrary, so prose colons aren't mistaken for qualified-name separators.
     qualified_name: ($) =>
-      prec(
-        4,
-        seq(
-          field("package", alias($.identifier, $.package_name)),
-          ":",
-          field(
-            "sublibrary",
+      token(
+        prec(
+          4,
+          seq(
+            /[A-Za-z_][A-Za-z0-9_.\-]*/,
+            ":",
             choice(
-              alias($.identifier, $.sublibrary_name),
-              alias("*", $.sublibrary_name),
+              /[A-Za-z_][A-Za-z0-9_.\-]*/,
+              "*",
+              seq(
+                "{",
+                /[A-Za-z_][A-Za-z0-9_.\-]*/,
+                repeat(seq(",", /[A-Za-z_][A-Za-z0-9_.\-]*/)),
+                "}",
+              ),
             ),
           ),
         ),
@@ -225,14 +268,18 @@ export default grammar({
     conditional: ($) =>
       seq(
         $.condition_if,
-        repeat($.condition_elseif),
-        optional($.condition_else),
+        // Newlines between clauses allow `else`/`elif` to be found even when
+        // the preceding `if`/`elif` has an empty body (no indented block).
+        repeat(seq(repeat($._newline), $.condition_elseif)),
+        optional(seq(repeat($._newline), $.condition_else)),
       ),
 
+    // The body of if/elif can be empty (e.g. `if flag(x)` immediately followed
+    // by `else`). Making the block optional handles that case.
     condition_if: ($) =>
-      seq("if", $.condition, $.property_or_conditional_block),
+      seq("if", $.condition, optional($.property_or_conditional_block)),
     condition_elseif: ($) =>
-      seq("elseif", $.condition, $.property_or_conditional_block),
+      seq("elif", $.condition, optional($.property_or_conditional_block)),
     condition_else: ($) => seq("else", $.property_or_conditional_block),
     condition: ($) => /.*/,
   },

@@ -2,7 +2,6 @@
 (comment) @comment
 
 ; cabal-version directive
-"cabal-version" @keyword.directive
 (spec_version) @number
 
 ; Field structure
@@ -13,7 +12,7 @@
 ; Conditional keywords
 [
   "if"
-  "elseif"
+  "elif"
   "else"
 ] @keyword.conditional
 
@@ -27,9 +26,8 @@
 (iso_date)        @string.special
 (url)             @string.special.url
 (path)            @string.special.path
-(module_name)    @module
-(package_name)    @string
-(sublibrary_name) @string
+(module_name)     @module
+(qualified_name)  @string
 (flag_token)      @constant
 (text_fragment)   @string
 

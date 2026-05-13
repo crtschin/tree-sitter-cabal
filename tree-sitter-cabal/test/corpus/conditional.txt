@@ -135,7 +135,7 @@ test-suite foo-test
         (dedent)))))
 
 ================================================================================
-Conditional with elseif
+Conditional with elif
 ================================================================================
 
 cabal-version: 3.2
@@ -144,7 +144,7 @@ name: singe-if
 common foo
     if flag(do-if)
       foo: bar
-    elseif flag(no-if)
+    elif flag(no-if)
       foo: baz
     else
       foo: qux
@@ -152,7 +152,7 @@ common foo
 library
     if flag(do-if)
       foo: bar
-    elseif flag(no-if)
+    elif flag(no-if)
       foo: baz
     else
       foo: qux

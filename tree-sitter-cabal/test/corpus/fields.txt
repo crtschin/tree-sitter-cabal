@@ -332,9 +332,7 @@ library
           (field_value
             (identifier))
           (field_value
-            (qualified_name
-              (package_name)
-              (sublibrary_name)))
+            (qualified_name))
           (dedent))
         (dedent)))))
 
