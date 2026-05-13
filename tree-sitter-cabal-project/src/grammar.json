@@ -102,8 +102,17 @@
       ]
     },
     "field_name": {
-      "type": "SYMBOL",
-      "name": "_word"
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_word"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_field_name"
+        }
+      ]
     },
     "_word": {
       "type": "PATTERN",
@@ -964,11 +973,11 @@
     },
     {
       "type": "SYMBOL",
-      "name": "_section_name_pad"
+      "name": "_section_name"
     },
     {
       "type": "SYMBOL",
-      "name": "_field_name_pad"
+      "name": "_field_name"
     }
   ],
   "inline": [],

@@ -112,9 +112,10 @@ static void stats_dump(void) {
 // ABI constraint: both grammars must list all seven tokens in this exact order in their
 // `externals` arrays. Tree-sitter sizes valid_symbols by the count of declared externals,
 // indexed by position. Removing or reordering an entry shifts subsequent indices and
-// causes out-of-bounds reads in scanner_scan. Cabal references section_name and
-// field_name in its rules; cabal-project pads those positions with unused symbols
-// (_section_name_pad, _field_name_pad) so the enum stays aligned.
+// causes out-of-bounds reads in scanner_scan. Both grammars reference _field_name from a
+// `choice($._word_or_ascii_regex, $._field_name)` rule; cabal additionally references
+// _section_name. cabal-project declares _section_name in its externals for enum
+// alignment but does not reference it in any rule, so its valid_symbols slot is never set.
 //
 // Indentation is measured in spaces. Blank lines reset the count to zero and are
 // skipped.
@@ -162,8 +163,10 @@ enum Token {
     DEDENT,
     INDENTED,
     CONTINUATION,
-    // Names. ASCII fast path + Unicode fallback. Only the cabal grammar
-    // references these; cabal-project pads the slots with unused externals.
+    // Hidden Unicode-fallback name externals. Both grammars wire FIELD_NAME
+    // through a `choice(ASCII, $._field_name)` rule and route their visible
+    // section_name / field_name nodes through it. SECTION_NAME is referenced
+    // only by the cabal grammar; cabal-project declares but doesn't use it.
     SECTION_NAME,
     FIELD_NAME,
 };
@@ -366,28 +369,32 @@ static bool scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbol
         STATS_PATH(SP_EOF_NEWLINE); return true;
     }
 
-    // Name dispatch. Implements an ASCII-fast / Unicode-fallback split:
+    // Name dispatch. Implements an ASCII-fast / Unicode-fallback split,
+    // shared by both grammars:
     //
-    //   - section_name and field_name are listed in `externals` *and* have
-    //     ASCII-only regex rules in grammar.js. Tree-sitter wires this into
-    //     scanner-first / DFA-fallback: scanner returns false → DFA tries.
-    //   - For ASCII names we return false here. The DFA matches via the
-    //     regex, and literal precedence still lets keywords like `library`,
-    //     `if`, `source-repository` beat the field_name regex at section-
-    //     header positions. Emitting unconditionally would steal those.
-    //   - For Unicode names we must commit, because the DFA's ASCII regex
-    //     would stop at the first byte ≥ 0x80 and the parser would error.
-    //     Unicode can sit anywhere in the name (`x-無`, `Fünfstück`), so we
-    //     have to walk the whole body to know whether to commit. The wasted
-    //     advances on pure-ASCII names cost ~17M Ir on the cabal corpus;
-    //     the DFA savings from dropping the Unicode range are ~105M Ir.
+    //   - The grammar's visible `field_name` (and cabal's `section_name`)
+    //     is a non-terminal that `choice`s between the existing ASCII
+    //     terminal (cabal's regex, cabal-project's $._word word token) and
+    //     the hidden $._field_name / $._section_name external below.
+    //   - For ASCII names we return false. The DFA picks among its
+    //     candidates with normal precedence — cabal's ci-regex aliases
+    //     (`library`, `if`, …) beat the field_name regex by specificity,
+    //     and cabal-project's keyword extraction routes `_word` through
+    //     literal aliases (`package`, `repository`, …). Emitting
+    //     unconditionally would steal both kinds of keyword.
+    //   - For Unicode names we commit, because both grammars' ASCII
+    //     terminals stop at the first byte ≥ 0x80 and the parser would
+    //     error. Unicode can sit anywhere in the name (`x-無`, `Fünfstück`),
+    //     so we walk the whole body before deciding. The wasted advances
+    //     on pure-ASCII names cost ~17M Ir on the cabal corpus; the DFA
+    //     savings from not having a Unicode range in the regex are ~105M Ir.
     //
     // `lookahead` is the codepoint, pre-decoded from UTF-8 by tree-sitter,
     // so the `>= 0x80` check in is_name_start covers any non-ASCII char in
     // a single integer compare.
     //
-    // Cabal-project's externals pad these slots with unused symbols, so
-    // both valid_symbols are always false there and the block is dead.
+    // cabal-project never sets valid_symbols[SECTION_NAME] (no section_name
+    // rule references it), so that branch is effectively cabal-only.
     if (valid_symbols[SECTION_NAME] || valid_symbols[FIELD_NAME]) {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
                lexer->lookahead == '\r' || lexer->lookahead == 0x00A0) {

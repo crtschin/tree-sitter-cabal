@@ -533,8 +533,17 @@
       ]
     },
     "section_name": {
-      "type": "PATTERN",
-      "value": "\\w*[a-zA-Z]\\w*(-\\w+)*"
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "PATTERN",
+          "value": "\\w*[a-zA-Z]\\w*(-\\w+)*"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_section_name"
+        }
+      ]
     },
     "comment": {
       "type": "TOKEN",
@@ -692,8 +701,17 @@
       ]
     },
     "field_name": {
-      "type": "PATTERN",
-      "value": "\\w(\\w|-)+"
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "PATTERN",
+          "value": "\\w(\\w|-)+"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_field_name"
+        }
+      ]
     },
     "field_value": {
       "type": "REPEAT1",
@@ -1223,11 +1241,11 @@
     },
     {
       "type": "SYMBOL",
-      "name": "section_name"
+      "name": "_section_name"
     },
     {
       "type": "SYMBOL",
-      "name": "field_name"
+      "name": "_field_name"
     }
   ],
   "inline": [

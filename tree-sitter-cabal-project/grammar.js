@@ -21,20 +21,18 @@ function indented_block($) {
 export default grammar({
   name: "cabal_project",
 
-  // Order must match scanner/scanner.c's enum Token. _indented,
-  // _section_name_pad, and _field_name_pad are declared so the shared
-  // scanner's valid_symbols array size matches its enum; cabal-project
-  // only references _newline, _indent, _dedent, _continuation. The
-  // scanner's Unicode-fallback for SECTION_NAME / FIELD_NAME is gated on
-  // valid_symbols[*], which the parser never sets for these padding slots.
+  // Order must match scanner/scanner.c's enum Token. _section_name is
+  // declared for enum alignment but not referenced (cabal-project has no
+  // section_name concept). _field_name is the hidden Unicode-fallback
+  // external, used inside the field_name rule below.
   externals: ($) => [
     $._newline,
     $._indent,
     $._dedent,
     $._indented,
     $._continuation,
-    $._section_name_pad,
-    $._field_name_pad,
+    $._section_name,
+    $._field_name,
   ],
 
   extras: ($) => [$.comment, /[ \t]/],
@@ -64,10 +62,12 @@ export default grammar({
         $._newline,
       ),
 
-    // Match any identifier-shaped name. The lexer prefers stanza-header literals
-    // (`package`, `repository`, …) over this regex due to literal precedence,
-    // so a stanza header isn't accidentally lexed as a field name.
-    field_name: ($) => $._word,
+    // ASCII fast path via $._word (also the grammar's word token) + Unicode
+    // fallback via the scanner-emitted $._field_name. _word stays a terminal
+    // so keyword extraction continues to win for stanza-header literals
+    // (`package`, `repository`, …); the scanner only fires when the name
+    // contains a non-ASCII byte.
+    field_name: ($) => choice($._word, $._field_name),
 
     _word: ($) => /[A-Za-z][A-Za-z0-9_-]*/,
 

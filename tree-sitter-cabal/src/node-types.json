@@ -276,6 +276,11 @@
     }
   },
   {
+    "type": "field_name",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "field_value",
     "named": true,
     "fields": {},
@@ -508,6 +513,11 @@
     }
   },
   {
+    "type": "section_name",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "sections",
     "named": true,
     "fields": {},
@@ -688,10 +698,6 @@
     "named": false
   },
   {
-    "type": "field_name",
-    "named": true
-  },
-  {
     "type": "flag_token",
     "named": true
   },
@@ -725,10 +731,6 @@
   },
   {
     "type": "quoted_string",
-    "named": true
-  },
-  {
-    "type": "section_name",
     "named": true
   },
   {

@@ -29,8 +29,12 @@ export default grammar({
     $.dedent,
     $._indented,
     $._continuation,
-    $.section_name,
-    $.field_name,
+    // Hidden Unicode externals. The scanner emits these only when a name
+    // contains a non-ASCII byte; visible `section_name` / `field_name`
+    // rules wrap them via `choice` with the ASCII regex. See the dispatch
+    // comment in scanner.c.
+    $._section_name,
+    $._field_name,
   ],
 
   word: ($) => $.identifier,
@@ -142,13 +146,11 @@ export default grammar({
         optional(field("properties", $.property_or_conditional_block)),
       ),
 
-    // ASCII fast path. Listed in externals; the scanner intercepts only when
-    // the name contains non-ASCII bytes (rare Unicode-named fields like
-    // `x-field-ä`). For all-ASCII names, the scanner returns false and this
-    // regex matches — keyword extraction then prefers section_type keywords
-    // (`library`, `if`, etc.) over the field_name regex via the standard
-    // word-token machinery.
-    section_name: ($) => /\w*[a-zA-Z]\w*(-\w+)*/,
+    // ASCII fast path via DFA + Unicode fallback via scanner-emitted
+    // `_section_name`. ci-regex aliases for section_type keywords win at
+    // top-level by specificity; the scanner only fires when the name
+    // contains a non-ASCII byte, so ASCII keywords are never preempted.
+    section_name: ($) => choice(/\w*[a-zA-Z]\w*(-\w+)*/, $._section_name),
 
     comment: ($) => token(seq("--", /.*/)),
 
@@ -177,7 +179,7 @@ export default grammar({
         ),
       ),
 
-    field_name: ($) => /\w(\w|-)+/,
+    field_name: ($) => choice(/\w(\w|-)+/, $._field_name),
 
     field_value: ($) => repeat1($._value_token),
 
