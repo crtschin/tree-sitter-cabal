@@ -5,6 +5,106 @@
 #include <tree_sitter/array.h>
 #include <tree_sitter/parser.h>
 
+#if defined(__GNUC__) || defined(__clang__)
+#define UNLIKELY(x) __builtin_expect(!!(x), 0)
+#else
+#define UNLIKELY(x) (x)
+#endif
+
+// Optional call-rate instrumentation. Build with `-DSCANNER_STATS` (see
+// `just stats` in each per-grammar directory). Off in normal builds: the
+// macros expand to `(void)0` so the dead-code stripper drops them entirely.
+#ifdef SCANNER_STATS
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef enum {
+    SP_PENDING_DEDENT,
+    SP_EOF_DEDENT,
+    SP_EOF_NEWLINE,
+    SP_INDENT,
+    SP_CONTINUATION,
+    SP_INDENTED,
+    SP_DEDENT_UNWIND,
+    SP_NEWLINE,
+    SP_FALSE_NO_NL,   // bailed before measuring next line (no '\n' in lookahead)
+    SP_FALSE_NO_MATCH,// measured indent but no valid_symbols branch fired
+    SP_COUNT
+} StatsPath;
+
+static const char *stats_path_name[SP_COUNT] = {
+    "pending", "eof_ded", "eof_nl", "indent", "cont",
+    "indented", "dedent", "newline", "no_nl", "no_match"
+};
+
+static uint64_t stats_calls = 0;
+static uint64_t stats_path[SP_COUNT] = {0};
+// Iteration counts across all calls. avg = total / calls.
+static uint64_t stats_iter_entry_ws = 0; // pre-'\n' whitespace skip
+static uint64_t stats_iter_consume = 0;  // consume_blanks loop body
+static uint64_t stats_iter_comment = 0;  // comment skip char loop
+static uint16_t stats_max_depth = 0;
+// Times the NEWLINE branch's unwind_to actually popped levels (vs being a no-op).
+// High values mean the pre-queue logic is doing real work; near-zero means the
+// NEWLINE branch could skip the unwind_to call.
+static uint64_t stats_newline_prequeued = 0;
+static bool stats_registered = false;
+
+static void stats_dump(void) {
+    if (stats_calls == 0) return;
+    uint64_t t = 0;
+    for (int i = 0; i < SP_FALSE_NO_NL; i++) t += stats_path[i];
+    uint64_t f = stats_path[SP_FALSE_NO_NL] + stats_path[SP_FALSE_NO_MATCH];
+    fprintf(stderr,
+            "[scanner-stats] calls=%llu true=%llu (%.1f%%) false=%llu (%.1f%%)\n",
+            (unsigned long long)stats_calls,
+            (unsigned long long)t,
+            100.0 * (double)t / (double)stats_calls,
+            (unsigned long long)f,
+            100.0 * (double)f / (double)stats_calls);
+    fprintf(stderr, "[scanner-stats] paths:");
+    for (int i = 0; i < SP_COUNT; i++) {
+        if (stats_path[i] > 0) {
+            fprintf(stderr, " %s=%llu",
+                    stats_path_name[i],
+                    (unsigned long long)stats_path[i]);
+        }
+    }
+    uint64_t nl = stats_path[SP_NEWLINE];
+    double pq_pct = nl > 0 ? 100.0 * (double)stats_newline_prequeued / (double)nl : 0.0;
+    fprintf(stderr,
+            "\n[scanner-stats] iter/call entry_ws=%.2f consume=%.2f comment=%.2f max_stack=%u prequeue=%llu/%llu (%.1f%%)\n",
+            (double)stats_iter_entry_ws / (double)stats_calls,
+            (double)stats_iter_consume / (double)stats_calls,
+            (double)stats_iter_comment / (double)stats_calls,
+            (unsigned)stats_max_depth,
+            (unsigned long long)stats_newline_prequeued,
+            (unsigned long long)nl,
+            pq_pct);
+}
+
+#define STATS_ENTER() do { \
+    stats_calls++; \
+    if (!stats_registered) { stats_registered = true; atexit(stats_dump); } \
+} while (0)
+#define STATS_PATH(p) (stats_path[p]++)
+#define STATS_ITER_ENTRY_WS() (stats_iter_entry_ws++)
+#define STATS_ITER_CONSUME() (stats_iter_consume++)
+#define STATS_ITER_COMMENT() (stats_iter_comment++)
+#define STATS_STACK(n) do { uint16_t _n = (uint16_t)(n); if (_n > stats_max_depth) stats_max_depth = _n; } while (0)
+#define STATS_PREQUEUE_BEGIN() uint16_t _pq_before = scanner->pending_dedents
+#define STATS_PREQUEUE_END() do { if (scanner->pending_dedents > _pq_before) stats_newline_prequeued++; } while (0)
+#else
+#define STATS_ENTER() ((void)0)
+#define STATS_PATH(p) ((void)0)
+#define STATS_ITER_ENTRY_WS() ((void)0)
+#define STATS_ITER_CONSUME() ((void)0)
+#define STATS_ITER_COMMENT() ((void)0)
+#define STATS_STACK(n) ((void)0)
+#define STATS_PREQUEUE_BEGIN() ((void)0)
+#define STATS_PREQUEUE_END() ((void)0)
+#endif
+
 // Layout-sensitive scanner shared by tree-sitter-cabal and tree-sitter-cabal-project.
 // Cabal-syntax uses one lexer for both file formats. The .cabal vs .project distinction
 // is purely semantic.
@@ -103,21 +203,28 @@ static void scanner_destroy(void *payload) {
 static uint16_t consume_blanks(TSLexer *lexer) {
     uint16_t indent = 0;
     while (true) {
-        if (lexer->lookahead == ' ' || lexer->lookahead == 0x00A0 /* nbsp */) {
+        // Ordered by frequency in real .cabal files: spaces dominate, newlines next
+        // (blank-line skipping), tabs occasionally, CR only in CRLF files, NBSP almost
+        // never.
+        if (lexer->lookahead == ' ') {
             indent++;
+            lexer->advance(lexer, true);
+        } else if (lexer->lookahead == '\n') {
+            indent = 0;
             lexer->advance(lexer, true);
         } else if (lexer->lookahead == '\t') {
             // Advance to the next 8-space tab stop.
             indent = (uint16_t)((indent + 8) & ~(uint16_t)7);
             lexer->advance(lexer, true);
-        } else if (lexer->lookahead == '\n') {
-            indent = 0;
-            lexer->advance(lexer, true);
         } else if (lexer->lookahead == '\r') {
+            lexer->advance(lexer, true);
+        } else if (lexer->lookahead == 0x00A0 /* nbsp */) {
+            indent++;
             lexer->advance(lexer, true);
         } else {
             break;
         }
+        STATS_ITER_CONSUME();
     }
     return indent;
 }
@@ -195,13 +302,15 @@ static void scanner_deserialize(void *payload, const char *buffer, unsigned leng
 // If indent lands strictly between two stack levels (error recovery), push it so
 // the stack stays accurate. No-op when indent already >= the current top.
 static void unwind_to(Scanner *scanner, uint16_t indent) {
+    uint16_t top = *array_back(&scanner->indents);
     bool popped = false;
-    while (indent < *array_back(&scanner->indents)) {
+    while (indent < top) {
         array_pop(&scanner->indents);
         scanner->pending_dedents++;
         popped = true;
+        top = *array_back(&scanner->indents);
     }
-    if (popped && indent > *array_back(&scanner->indents)) {
+    if (popped && indent > top) {
         array_push(&scanner->indents, indent);
     }
 }
@@ -209,27 +318,30 @@ static void unwind_to(Scanner *scanner, uint16_t indent) {
 static bool scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbols) {
     Scanner *scanner = (Scanner *)payload;
 
+    STATS_ENTER();
+    STATS_STACK(scanner->indents.size);
+
     // Drain one queued DEDENT without advancing. The lexer position was already
     // committed when the dedents were queued (consume_blanks ran in a prior call),
     // so no further advance is needed.
     if (valid_symbols[DEDENT] && scanner->pending_dedents > 0) {
         scanner->pending_dedents--;
         lexer->result_symbol = DEDENT;
-        return true;
+        STATS_PATH(SP_PENDING_DEDENT); return true;
     }
     // At EOF, keep returning DEDENT for as many calls as the grammar makes. Tree-sitter
     // discards scanner state when parsing ends, so the stack is never consulted again.
-    if (valid_symbols[DEDENT] && lexer->eof(lexer)) {
+    if (UNLIKELY(valid_symbols[DEDENT] && lexer->eof(lexer))) {
         lexer->result_symbol = DEDENT;
-        return true;
+        STATS_PATH(SP_EOF_DEDENT); return true;
     }
     // Latches once so the grammar's repeat($._newline) cannot loop on the virtual
     // NEWLINE. See eof_newline_emitted in the Scanner struct.
-    if (valid_symbols[NEWLINE] && lexer->eof(lexer) &&
-        !scanner->eof_newline_emitted) {
+    if (UNLIKELY(valid_symbols[NEWLINE] && lexer->eof(lexer) &&
+                 !scanner->eof_newline_emitted)) {
         scanner->eof_newline_emitted = true;
         lexer->result_symbol = NEWLINE;
-        return true;
+        STATS_PATH(SP_EOF_NEWLINE); return true;
     }
     // Skip leading horizontal whitespace and \r so trailing spaces before a line
     // ending don't block NEWLINE/DEDENT detection. Tree-sitter calls the external
@@ -238,9 +350,10 @@ static bool scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbol
     while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
            lexer->lookahead == '\r' || lexer->lookahead == 0x00A0) {
         lexer->advance(lexer, true);
+        STATS_ITER_ENTRY_WS();
     }
     if (lexer->eof(lexer) || lexer->lookahead != '\n') {
-        return false;
+        STATS_PATH(SP_FALSE_NO_NL); return false;
     }
 
     uint16_t cur_indent_lvl = *array_back(&scanner->indents);
@@ -281,6 +394,7 @@ static bool scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbol
         }
         while (lexer->lookahead != '\n' && !lexer->eof(lexer)) {
             lexer->advance(lexer, true);
+            STATS_ITER_COMMENT();
         }
         if (lexer->eof(lexer)) {
             indent = 0;
@@ -293,24 +407,24 @@ static bool scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbol
     if (valid_symbols[INDENT] && indent > cur_indent_lvl) {
         array_push(&scanner->indents, indent);
         lexer->result_symbol = INDENT;
-        return true;
+        STATS_PATH(SP_INDENT); return true;
     } else if (valid_symbols[CONTINUATION] && indent > cur_indent_lvl) {
         // INDENT is checked first. The grammar should not make both valid at once,
         // but this ordering makes the priority explicit.
         lexer->result_symbol = CONTINUATION;
-        return true;
+        STATS_PATH(SP_CONTINUATION); return true;
     } else if (valid_symbols[INDENTED] && indent > prev_indent_lvl) {
         // Deeper than prev (not cur), so a continuation line at the same column as the
         // first value line still passes.
         lexer->result_symbol = INDENTED;
-        return true;
+        STATS_PATH(SP_INDENTED); return true;
     } else if (valid_symbols[DEDENT] && indent < cur_indent_lvl) {
         // Unwind the stack and emit one DEDENT directly. The helper queues one per pop,
         // so we subtract one to account for the DEDENT returned here.
         unwind_to(scanner, indent);
         scanner->pending_dedents--;
         lexer->result_symbol = DEDENT;
-        return true;
+        STATS_PATH(SP_DEDENT_UNWIND); return true;
     } else if (valid_symbols[NEWLINE]) {
         // No indent change (or DEDENT not yet valid). Emit NEWLINE to close the
         // current logical line.
@@ -320,11 +434,15 @@ static bool scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbol
         // that requires NEWLINE first), unwind the stack now. By the time the grammar
         // requests DEDENT, consume_blanks has already advanced past the whitespace and
         // the indent information is gone.
-        unwind_to(scanner, indent);
+        STATS_PREQUEUE_BEGIN();
+        if (indent < cur_indent_lvl) {
+            unwind_to(scanner, indent);
+        }
+        STATS_PREQUEUE_END();
         lexer->result_symbol = NEWLINE;
-        return true;
+        STATS_PATH(SP_NEWLINE); return true;
     } else {
-        return false;
+        STATS_PATH(SP_FALSE_NO_MATCH); return false;
     }
 }
 

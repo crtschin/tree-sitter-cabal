@@ -25,6 +25,10 @@ flamegraph: cabal::flamegraph cabal-project::flamegraph
 # Benchmark both grammars with hyperfine.
 bench: cabal::bench cabal-project::bench
 
+# Parse both corpora with scanner instrumentation enabled. Emits one
+# [scanner-stats] line per grammar on stderr.
+stats: cabal::stats cabal-project::stats
+
 # Update flake inputs.
 update +args:
   nix flake update {{args}}

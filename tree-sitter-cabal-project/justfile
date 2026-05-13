@@ -40,3 +40,14 @@ flamegraph:
 # Benchmark parsing the cabal-project corpus with hyperfine.
 bench:
     ../test/bench-corpus.sh cabal-project
+
+# Parse the corpus with -DSCANNER_STATS so the scanner emits a one-line
+# [scanner-stats] call-rate report on stderr. Uses `tree-sitter parse
+# --rebuild` to force a fresh compile with the flag, then a second --rebuild
+# without the flag to restore an uninstrumented .so in the cache for normal runs.
+stats:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mapfile -t files < <(../test/cabal-project-files.sh)
+    CFLAGS="-DSCANNER_STATS" tree-sitter parse --quiet --rebuild "${files[@]}" >/dev/null
+    tree-sitter parse --quiet --rebuild "${files[0]}" >/dev/null 2>&1
