@@ -7,7 +7,9 @@ function ci(str) {
   return new RegExp(
     str
       .split("")
-      .map((c) => (/[a-zA-Z]/.test(c) ? `[${c.toLowerCase()}${c.toUpperCase()}]` : c))
+      .map((c) =>
+        /[a-zA-Z]/.test(c) ? `[${c.toLowerCase()}${c.toUpperCase()}]` : c,
+      )
       .join(""),
   );
 }
@@ -49,8 +51,7 @@ export default grammar({
 
     // Matches the modern bare version (3.0), the old range prefix (>= 1.8),
     // and the old -any / -none forms used before cabal-version was meaningful.
-    spec_version: ($) =>
-      /(>=?\s*)?\d+\.\d+(\.\d+)*(\.\*)?\s*\n|[+\-]any\s*\n/,
+    spec_version: ($) => /(>=?\s*)?\d+\.\d+(\.\d+)*(\.\*)?\s*\n|[+\-]any\s*\n/,
 
     properties: ($) => repeat1(seq($.field, repeat($._newline))),
 
@@ -191,7 +192,7 @@ export default grammar({
         "=",
         "!",
         ":",
-        "\"",
+        '"',
       ),
 
     boolean: ($) => token(prec(7, choice("True", "False"))),

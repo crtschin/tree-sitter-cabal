@@ -14,9 +14,24 @@
 // indexed by position. Removing or reordering an entry shifts subsequent indices and
 // causes out-of-bounds reads in scanner_scan.
 //
-// Indentation is measured in spaces. A tab in leading whitespace stops the count
-// (matching Cabal's own lexer, which rejects tabs for indentation). Blank lines reset
-// the count to zero and are skipped.
+// Indentation is measured in spaces. Blank lines reset the count to zero and are
+// skipped.
+//
+// Leniencies vs Cabal's own lexer (Distribution.Fields.Lexer). This scanner accepts
+// input Cabal would reject; the grammar still parses such files rather than failing
+// fast. Track here so the divergence is visible:
+//
+//   1. Tabs in indentation. Cabal rejects them. We advance to the next 8-space stop
+//      (consume_blanks) and treat tabs as horizontal whitespace before a newline
+//      (scanner_scan). Reason: real-world .cabal files in HLS/Cabal corpora contain
+//      stray tabs; rejecting would cause spurious parse failures in editors.
+//   2. NBSP (U+00A0) in indentation. Cabal treats NBSP as an ordinary character. We
+//      count it as one space. Reason: paste-from-doc accidents; cheap to tolerate.
+//   3. CR (\r) anywhere. Cabal rejects bare CR. We skip silently so CRLF files parse
+//      identically to LF files.
+//   4. Comment indent. Cabal comments (`--`) are layout-transparent regardless of
+//      column. We follow that exactly; noted because it differs from Haskell's
+//      layout rule, which does respect comment columns in some positions.
 
 // NEWLINE     - End of a logical line. Fired when the next non-blank line has the same
 //               or a greater indent, or when DEDENT is not yet valid and must be
@@ -82,8 +97,9 @@ static void scanner_destroy(void *payload) {
 }
 
 // Advance past spaces and blank lines and return the column of the next significant
-// character. Tabs stop the count (lookahead 0 at EOF also exits the loop naturally).
-// \r is skipped silently so CRLF files behave identically to LF files.
+// character. Tabs advance to the next 8-space stop; NBSP counts as a space; \r is
+// skipped silently so CRLF files behave identically to LF files. EOF (lookahead 0)
+// exits the loop naturally.
 static uint16_t consume_blanks(TSLexer *lexer) {
     uint16_t indent = 0;
     while (true) {
@@ -138,18 +154,18 @@ static unsigned scanner_serialize(void *payload, char *buffer) {
     return size;
 }
 
-// Restore state from the buffer written by scanner_serialize.
-// The guard `pos + 1 < length` ensures two bytes are available before each uint16_t
-// read. If the buffer was truncated (stack too deep for 1024 bytes), we stop early and
-// restore what fit. The sentinel 0 is pushed when nothing survived to preserve the
-// invariant that indents is never empty.
+// Restore state from the buffer written by scanner_serialize. A buffer shorter than
+// the 5-byte header is treated as fresh state. The guard `pos + 1 < length` ensures
+// two bytes are available before each uint16_t stack read; if the buffer was
+// truncated (stack too deep for 1024 bytes), we stop early. The sentinel 0 is pushed
+// when nothing survived to preserve the invariant that indents is never empty.
 static void scanner_deserialize(void *payload, const char *buffer, unsigned length) {
     Scanner *scanner = (Scanner *)payload;
     array_clear(&scanner->indents);
     scanner->pending_dedents = 0;
     scanner->eof_newline_emitted = false;
 
-    if (length == 0) {
+    if (length < 5) {
         array_push(&scanner->indents, 0);
         return;
     }
@@ -162,9 +178,7 @@ static void scanner_deserialize(void *payload, const char *buffer, unsigned leng
     uint16_t stack_size = (uint8_t)buffer[pos++];
     stack_size |= ((uint16_t)(uint8_t)buffer[pos++]) << 8;
 
-    if (pos < length) {
-        scanner->eof_newline_emitted = buffer[pos++] != 0;
-    }
+    scanner->eof_newline_emitted = buffer[pos++] != 0;
 
     for (uint16_t i = 0; i < stack_size && pos + 1 < length; i++) {
         uint16_t v = (uint8_t)buffer[pos++];
@@ -174,6 +188,21 @@ static void scanner_deserialize(void *payload, const char *buffer, unsigned leng
 
     if (scanner->indents.size == 0) {
         array_push(&scanner->indents, 0);
+    }
+}
+
+// Pop the indent stack until the top is <= indent, queuing one DEDENT per pop.
+// If indent lands strictly between two stack levels (error recovery), push it so
+// the stack stays accurate. No-op when indent already >= the current top.
+static void unwind_to(Scanner *scanner, uint16_t indent) {
+    bool popped = false;
+    while (indent < *array_back(&scanner->indents)) {
+        array_pop(&scanner->indents);
+        scanner->pending_dedents++;
+        popped = true;
+    }
+    if (popped && indent > *array_back(&scanner->indents)) {
+        array_push(&scanner->indents, indent);
     }
 }
 
@@ -276,68 +305,10 @@ static bool scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbol
         lexer->result_symbol = INDENTED;
         return true;
     } else if (valid_symbols[DEDENT] && indent < cur_indent_lvl) {
-        // When the line that triggers DEDENT starts with `--`, place the token boundary
-        // before the comment and handle the stack transition here. Tree-sitter then
-        // re-lexes the `--` as a comment extras node on the next pass.
-        if (lexer->lookahead == '-') {
-            if (!marked) {
-                lexer->mark_end(lexer);
-                marked = true;
-            }
-            lexer->advance(lexer, true);
-            if (lexer->lookahead == '-') {
-                // It is a `--` comment. If NEWLINE is also valid (the grammar has not
-                // yet consumed the end-of-line for the preceding construct), emit NEWLINE
-                // and queue all pending DEDENTs. The grammar will request them one by one
-                // via pending_dedents after the comment is re-lexed.
-                if (valid_symbols[NEWLINE]) {
-                    uint16_t lvl = cur_indent_lvl;
-                    while (indent < lvl) {
-                        array_pop(&scanner->indents);
-                        lvl = *array_back(&scanner->indents);
-                        scanner->pending_dedents++;
-                    }
-                    if (indent > lvl) {
-                        array_push(&scanner->indents, indent);
-                    }
-                    lexer->result_symbol = NEWLINE;
-                    return true;
-                } else if (valid_symbols[DEDENT]) {
-                    // NEWLINE is not valid. Emit one DEDENT now and queue the rest.
-                    // The loop increments pending_dedents once per pop. We subtract one
-                    // because we are about to emit that DEDENT directly.
-                    while (indent < cur_indent_lvl) {
-                        array_pop(&scanner->indents);
-                        cur_indent_lvl = *array_back(&scanner->indents);
-                        scanner->pending_dedents++;
-                    }
-                    scanner->pending_dedents--;
-                    if (indent > cur_indent_lvl) {
-                        array_push(&scanner->indents, indent);
-                    }
-                    lexer->result_symbol = DEDENT;
-                    return true;
-                }
-                return false;
-            }
-            // Single '-', not a comment. The token boundary is already marked.
-            // Fall through to normal DEDENT handling.
-        }
-        // Unwind the stack to the matching level and emit one DEDENT. Queue the rest.
-        // The loop increments pending_dedents once per pop, so we subtract one for the
-        // DEDENT returned here.
-        //
-        // If indent lands between two stack levels after unwinding (possible in error
-        // recovery), push the new level so the stack stays accurate.
-        while (indent < cur_indent_lvl) {
-            array_pop(&scanner->indents);
-            cur_indent_lvl = *array_back(&scanner->indents);
-            scanner->pending_dedents++;
-        }
+        // Unwind the stack and emit one DEDENT directly. The helper queues one per pop,
+        // so we subtract one to account for the DEDENT returned here.
+        unwind_to(scanner, indent);
         scanner->pending_dedents--;
-        if (indent > cur_indent_lvl) {
-            array_push(&scanner->indents, indent);
-        }
         lexer->result_symbol = DEDENT;
         return true;
     } else if (valid_symbols[NEWLINE]) {
@@ -349,17 +320,7 @@ static bool scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbol
         // that requires NEWLINE first), unwind the stack now. By the time the grammar
         // requests DEDENT, consume_blanks has already advanced past the whitespace and
         // the indent information is gone.
-        if (indent < cur_indent_lvl) {
-            uint16_t lvl = cur_indent_lvl;
-            while (indent < lvl) {
-                array_pop(&scanner->indents);
-                lvl = *array_back(&scanner->indents);
-                scanner->pending_dedents++;
-            }
-            if (indent > lvl) {
-                array_push(&scanner->indents, indent);
-            }
-        }
+        unwind_to(scanner, indent);
         lexer->result_symbol = NEWLINE;
         return true;
     } else {
