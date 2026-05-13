@@ -7,8 +7,6 @@ Tree-sitter grammars for Haskell's Cabal build system.
 
 The `.cabal` grammar was initially forked from [magus/tree-sitter-cabal](https://gitlab.com/magus/tree-sitter-cabal/).
 
-Disclaimer: Co-produced with a coding agent.
-
 ## Setup
 
 ```sh
@@ -37,3 +35,7 @@ The `test` target includes a corpus parse over the same test set from the Cabal 
 - [Tree-sitter: Creating parsers](https://tree-sitter.github.io/tree-sitter/creating-parsers)
 - [Cabal: .cabal file reference](https://cabal.readthedocs.io/en/stable/cabal-package.html)
 - [Cabal: cabal.project reference](https://cabal.readthedocs.io/en/stable/cabal-project.html)
+
+------------------------------------------------------
+
+Disclaimer: Co-produced with a coding agent.
