@@ -39,6 +39,8 @@
               cp -rL ${./.}/${pname} $out
               chmod -R +w $out
               cp ${./scanner/scanner.c} $out/src/scanner.c
+              mkdir -p $out/common
+              cp ${./common/utils.mjs} $out/common/utils.mjs
             '';
           in
           pkgs.tree-sitter.buildGrammar {

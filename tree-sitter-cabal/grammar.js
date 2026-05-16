@@ -1,6 +1,8 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
 
+import { makePredicateRules } from "./common/utils.mjs";
+
 // Build a case-insensitive regex for a keyword. Each ASCII letter becomes
 // [aA], each non-letter (hyphen, digit) is kept as-is.
 function ci(str) {
@@ -280,10 +282,19 @@ export default grammar({
     // The body of if/elif can be empty (e.g. `if flag(x)` immediately followed
     // by `else`). Making the block optional handles that case.
     condition_if: ($) =>
-      seq("if", $.condition, optional($.property_or_conditional_block)),
+      seq(
+        "if",
+        field("condition", $._predicate_expr),
+        optional($.property_or_conditional_block),
+      ),
     condition_elseif: ($) =>
-      seq("elif", $.condition, optional($.property_or_conditional_block)),
+      seq(
+        "elif",
+        field("condition", $._predicate_expr),
+        optional($.property_or_conditional_block),
+      ),
     condition_else: ($) => seq("else", $.property_or_conditional_block),
-    condition: ($) => /.*/,
+
+    ...makePredicateRules({ extraArgChoices: ["text_fragment"] }),
   },
 });

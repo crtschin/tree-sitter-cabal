@@ -16,8 +16,21 @@
   "else"
 ] @keyword.conditional
 
-; Condition expression
-(condition) @string.special
+; Predicates in conditions
+(predicate_call
+  fn: (identifier) @function.builtin)
+
+(predicate_arg (identifier) @variable.parameter)
+
+(predicate_or    (identifier) @variable)
+(predicate_and   (identifier) @variable)
+(predicate_not   (identifier) @variable)
+(predicate_paren (identifier) @variable)
+(condition_if      condition: (identifier) @variable)
+(condition_elseif  condition: (identifier) @variable)
+
+"||" @operator
+"&&" @operator
 
 ; Literals in field values
 (boolean)         @constant.builtin.boolean
@@ -30,7 +43,8 @@
 (flag_token)      @constant
 (text_fragment)   @string
 
-; Bare identifiers in field values
+; Quoted strings and bare identifiers in field values
+(quoted_string) @string
 (field_value (identifier) @string)
 
 ; Operators
