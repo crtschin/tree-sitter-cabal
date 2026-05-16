@@ -73,3 +73,39 @@ export function makePredicateRules({ extraArgChoices = [] } = {}) {
       ),
   };
 }
+
+// `precs`: per-grammar lexical precedence values. Do not share one map across
+// both grammars. Cabal inserts `module_name` between `version` and
+// `qualified_name`, shifting all precedences above it by 1.
+export function makeValueTokenRules({ precs }) {
+  return {
+    boolean: ($) => token(prec(precs.boolean, choice("True", "False"))),
+
+    iso_date: ($) =>
+      token(
+        prec(
+          precs.iso_date,
+          /[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}Z)?/,
+        ),
+      ),
+
+    url: ($) =>
+      token(
+        prec(precs.url, /(https?|file|ftp|git|ssh)\+?[a-z]*:\/\/?[^\s,()<>]+/),
+      ),
+
+    version: ($) => token(prec(precs.version, /[0-9]+(\.[0-9]+)+(\.\*)?/)),
+
+    flag_token: ($) =>
+      token(prec(precs.flag_token, /[+\-][A-Za-z][A-Za-z0-9_-]*/)),
+
+    integer: ($) => token(prec(precs.integer, /[0-9]+/)),
+
+    constraint_op: ($) =>
+      token(choice("==", ">=", "<=", "<", ">", "^>=", "&&", "||")),
+
+    quoted_string: ($) => token(/"[^"\n]*"/),
+
+    comment: ($) => token(seq("--", /[^\n]*/)),
+  };
+}

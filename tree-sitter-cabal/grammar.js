@@ -1,7 +1,7 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
 
-import { makePredicateRules } from "./common/utils.mjs";
+import { makePredicateRules, makeValueTokenRules } from "./common/utils.mjs";
 
 // Build a case-insensitive regex for a keyword. Each ASCII letter becomes
 // [aA], each non-letter (hyphen, digit) is kept as-is.
@@ -154,8 +154,6 @@ export default grammar({
     // contains a non-ASCII byte, so ASCII keywords are never preempted.
     section_name: ($) => choice(/\w*[a-zA-Z]\w*(-\w+)*/, $._section_name),
 
-    comment: ($) => token(seq("--", /.*/)),
-
     property_block: ($) =>
       seq(
         $.indent,
@@ -211,18 +209,6 @@ export default grammar({
         '"',
       ),
 
-    boolean: ($) => token(prec(7, choice("True", "False"))),
-
-    iso_date: ($) =>
-      token(
-        prec(8, /[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}Z)?/),
-      ),
-
-    url: ($) =>
-      token(prec(9, /(https?|file|ftp|git|ssh)\+?[a-z]*:\/\/?[^\s,()<>]+/)),
-
-    version: ($) => token(prec(6, /[0-9]+(\.[0-9]+)+(\.\*)?/)),
-
     module_name: ($) =>
       token(prec(5, /[A-Z][A-Za-z0-9_']*(\.[A-Z][A-Za-z0-9_']*)+/)),
 
@@ -249,18 +235,9 @@ export default grammar({
         ),
       ),
 
-    flag_token: ($) => token(prec(3, /[+\-][A-Za-z][A-Za-z0-9_-]*/)),
-
-    integer: ($) => token(prec(2, /[0-9]+/)),
-
     identifier: ($) => token(prec(1, /[A-Za-z_][A-Za-z0-9_.\-]*/)),
 
-    constraint_op: ($) =>
-      token(choice("==", ">=", "<=", "<", ">", "^>=", "&&", "||")),
-
     text_fragment: ($) => token(prec(-1, /[^\s,()!*<>{}=\n"]+/)),
-
-    quoted_string: ($) => token(/"[^"\n]*"/),
 
     property_or_conditional_block: ($) =>
       seq(
@@ -296,5 +273,15 @@ export default grammar({
     condition_else: ($) => seq("else", $.property_or_conditional_block),
 
     ...makePredicateRules({ extraArgChoices: ["text_fragment"] }),
+    ...makeValueTokenRules({
+      precs: {
+        boolean: 7,
+        iso_date: 8,
+        url: 9,
+        version: 6,
+        flag_token: 3,
+        integer: 2,
+      },
+    }),
   },
 });

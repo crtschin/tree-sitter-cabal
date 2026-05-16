@@ -7,7 +7,7 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
 
-import { makePredicateRules } from "./common/utils.mjs";
+import { makePredicateRules, makeValueTokenRules } from "./common/utils.mjs";
 
 function indented_block($) {
   return optional(seq($._indent, repeat($._block_item), $._dedent));
@@ -42,10 +42,6 @@ export default grammar({
     _top_item: ($) => choice($.field, $.stanza, $.conditional, $._newline),
 
     _block_item: ($) => choice($.field, $.conditional, $._newline),
-
-    // ---------- Comments ----------
-
-    comment: ($) => token(seq("--", /[^\n]*/)),
 
     // ---------- Fields ----------
 
@@ -96,20 +92,6 @@ export default grammar({
         "!",
       ),
 
-    // Tokens — declared with `token(prec(...))` for longest-match ordering.
-
-    boolean: ($) => token(prec(6, choice("True", "False"))),
-
-    iso_date: ($) =>
-      token(
-        prec(7, /[0-9]{4}-[0-9]{2}-[0-9]{2}(T[0-9]{2}:[0-9]{2}:[0-9]{2}Z)?/),
-      ),
-
-    version: ($) => token(prec(5, /[0-9]+(\.[0-9]+)+(\.\*)?/)),
-
-    url: ($) =>
-      token(prec(8, /(https?|file|ftp|git|ssh)\+?[a-z]*:\/\/?[^\s,()<>]+/)),
-
     qualified_name: ($) =>
       prec(
         4,
@@ -125,10 +107,6 @@ export default grammar({
           ),
         ),
       ),
-
-    flag_token: ($) => token(prec(3, /[+\-][A-Za-z][A-Za-z0-9_-]*/)),
-
-    integer: ($) => token(prec(2, /[0-9]+/)),
 
     // Identifier covers names, enum-ish values (streaming, modular),
     // versionish hyphenated tokens (ghc-9.4), and dotted/slashy path
@@ -146,11 +124,6 @@ export default grammar({
           choice(/\/[A-Za-z0-9_*?.\-\/]+/, /\.\.?(\/[A-Za-z0-9_*?.\-\/]*)?/),
         ),
       ),
-
-    quoted_string: ($) => token(/"[^"\n]*"/),
-
-    constraint_op: ($) =>
-      token(choice("==", ">=", "<=", "<", ">", "^>=", "&&", "||")),
 
     // ---------- Stanzas ----------
 
@@ -194,5 +167,15 @@ export default grammar({
     else_clause: ($) => seq("else", indented_block($)),
 
     ...makePredicateRules({ extraArgChoices: ["path"] }),
+    ...makeValueTokenRules({
+      precs: {
+        boolean: 6,
+        iso_date: 7,
+        url: 8,
+        version: 5,
+        flag_token: 3,
+        integer: 2,
+      },
+    }),
   },
 });
