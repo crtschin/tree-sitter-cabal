@@ -7,12 +7,7 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
 
-const PREDICATE_PRECEDENCE = {
-  or: 1,
-  and: 2,
-  not: 3,
-  call: 1,
-};
+import { makePredicateRules } from "./common/utils.mjs";
 
 function indented_block($) {
   return optional(seq($._indent, repeat($._block_item), $._dedent));
@@ -198,59 +193,6 @@ export default grammar({
 
     else_clause: ($) => seq("else", indented_block($)),
 
-    _predicate_expr: ($) =>
-      choice(
-        $.predicate_or,
-        $.predicate_and,
-        $.predicate_not,
-        $._predicate_atom,
-      ),
-
-    predicate_or: ($) =>
-      prec.left(
-        PREDICATE_PRECEDENCE.or,
-        seq($._predicate_expr, "||", $._predicate_expr),
-      ),
-
-    predicate_and: ($) =>
-      prec.left(
-        PREDICATE_PRECEDENCE.and,
-        seq($._predicate_expr, "&&", $._predicate_expr),
-      ),
-
-    predicate_not: ($) =>
-      prec(PREDICATE_PRECEDENCE.not, seq("!", $._predicate_expr)),
-
-    _predicate_atom: ($) =>
-      choice($.predicate_call, $.predicate_paren, $.boolean, $.identifier),
-
-    predicate_paren: ($) => seq("(", $._predicate_expr, ")"),
-
-    predicate_call: ($) =>
-      prec(
-        PREDICATE_PRECEDENCE.call,
-        seq(
-          field("fn", $.identifier),
-          "(",
-          optional(field("arg", $.predicate_arg)),
-          ")",
-        ),
-      ),
-
-    predicate_arg: ($) =>
-      repeat1(
-        choice(
-          $.boolean,
-          $.version,
-          $.iso_date,
-          $.qualified_name,
-          $.flag_token,
-          $.integer,
-          $.identifier,
-          $.constraint_op,
-          $.path,
-          ",",
-        ),
-      ),
+    ...makePredicateRules({ extraArgChoices: ["path"] }),
   },
 });

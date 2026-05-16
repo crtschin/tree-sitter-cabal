@@ -28,7 +28,8 @@
 (qualified_name (sublibrary_name) @string)
 (flag_token)                      @constant
 
-; bare identifiers in field values
+; quoted strings and bare identifiers in field values
+(quoted_string) @string
 (field_value (identifier) @string)
 
 ; predicates

@@ -1,8 +1,8 @@
 default: test
 
 # Run tests for this grammar
-test: parse-corpus
-    tree-sitter test
+test: build parse-corpus
+    tree-sitter test --lib-path result/parser --lang-name cabal_project
 
 # Parse every cabal.project / *.project file across the configured corpora.
 parse-corpus:
@@ -11,7 +11,6 @@ parse-corpus:
 # Build the grammar via the nix flake (buildGrammar runs generate internally).
 build:
     nix build ..#tree-sitter-cabal-project
-    tree-sitter generate
 
 # Check grammar for errors
 check:
@@ -25,12 +24,17 @@ fmt mode="write":
 clean:
     rm -rf cabal-project.so result
 
+# Generate src/parser.c locally (needed by highlight and stats).
+generate:
+    mkdir -p common && cp ../common/utils.mjs common/utils.mjs
+    tree-sitter generate
+
 # Parse a file and print AST
-parse file:
-    tree-sitter parse {{ file }}
+parse file: build
+    tree-sitter parse --lib-path result/parser --lang-name cabal_project {{ file }}
 
 # Show syntax highlighting for a file
-highlight file:
+highlight file: generate
     tree-sitter highlight {{ file }}
 
 # Profile parsing the cabal-project corpus and emit flamegraph-cabal-project.svg at the repo root.
@@ -51,7 +55,7 @@ valgrind tool="callgrind":
 # [scanner-stats] call-rate report on stderr. Uses `tree-sitter parse
 # --rebuild` to force a fresh compile with the flag, then a second --rebuild
 # without the flag to restore an uninstrumented .so in the cache for normal runs.
-stats:
+stats: generate
     #!/usr/bin/env bash
     set -euo pipefail
     mapfile -t files < <(../test/cabal-project-files.sh)

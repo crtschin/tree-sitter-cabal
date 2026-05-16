@@ -31,7 +31,10 @@ library
         (indent)
         (conditional
           (condition_if
-            (condition)
+            (predicate_call
+              (identifier)
+              (predicate_arg
+                (identifier)))
             (property_or_conditional_block
               (indent)
               (field
@@ -46,7 +49,10 @@ library
         (indent)
         (conditional
           (condition_if
-            (condition)
+            (predicate_call
+              (identifier)
+              (predicate_arg
+                (identifier)))
             (property_or_conditional_block
               (indent)
               (field
@@ -92,7 +98,10 @@ test-suite foo-test
         (indent)
         (conditional
           (condition_if
-            (condition)
+            (predicate_call
+              (identifier)
+              (predicate_arg
+                (identifier)))
             (property_or_conditional_block
               (indent)
               (field
@@ -116,7 +125,10 @@ test-suite foo-test
         (indent)
         (conditional
           (condition_if
-            (condition)
+            (predicate_call
+              (identifier)
+              (predicate_arg
+                (identifier)))
             (property_or_conditional_block
               (indent)
               (field
@@ -175,7 +187,10 @@ library
         (indent)
         (conditional
           (condition_if
-            (condition)
+            (predicate_call
+              (identifier)
+              (predicate_arg
+                (identifier)))
             (property_or_conditional_block
               (indent)
               (field
@@ -184,7 +199,10 @@ library
                   (identifier)))
               (dedent)))
           (condition_elseif
-            (condition)
+            (predicate_call
+              (identifier)
+              (predicate_arg
+                (identifier)))
             (property_or_conditional_block
               (indent)
               (field
@@ -207,7 +225,10 @@ library
         (indent)
         (conditional
           (condition_if
-            (condition)
+            (predicate_call
+              (identifier)
+              (predicate_arg
+                (identifier)))
             (property_or_conditional_block
               (indent)
               (field
@@ -216,7 +237,10 @@ library
                   (identifier)))
               (dedent)))
           (condition_elseif
-            (condition)
+            (predicate_call
+              (identifier)
+              (predicate_arg
+                (identifier)))
             (property_or_conditional_block
               (indent)
               (field

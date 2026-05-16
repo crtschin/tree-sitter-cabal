@@ -287,7 +287,10 @@ benchmark sandi-bench
           (dedent))
         (conditional
           (condition_if
-            (condition)
+            (predicate_call
+              (identifier)
+              (predicate_arg
+                (identifier)))
             (property_or_conditional_block
               (indent)
               (field
