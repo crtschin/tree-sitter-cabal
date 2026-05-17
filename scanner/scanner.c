@@ -11,6 +11,8 @@
 #define UNLIKELY(x) (x)
 #endif
 
+#define NBSP 0x00A0
+
 // Optional call-rate instrumentation. Build with `-DSCANNER_STATS` (see
 // `just stats` in each per-grammar directory). Off in normal builds: the
 // macros expand to `(void)0` so the dead-code stripper drops them entirely.
@@ -190,12 +192,21 @@ typedef struct {
     bool eof_newline_emitted;
 } Scanner;
 
-static void *scanner_create(void) {
-    Scanner *scanner = ts_malloc(sizeof(Scanner));
-    array_init(&scanner->indents);
+// Restore the scanner to its initial state: empty indent stack with the
+// sentinel 0 at the bottom, no queued dedents, EOF flag clear. Used at
+// construction time and by scanner_deserialize when a cached state is
+// missing or fails validation.
+static void scanner_reset(Scanner *scanner) {
+    array_clear(&scanner->indents);
     array_push(&scanner->indents, 0);
     scanner->pending_dedents = 0;
     scanner->eof_newline_emitted = false;
+}
+
+static void *scanner_create(void) {
+    Scanner *scanner = ts_malloc(sizeof(Scanner));
+    array_init(&scanner->indents);
+    scanner_reset(scanner);
     return scanner;
 }
 
@@ -222,11 +233,11 @@ static inline bool is_name_cont(int32_t c) {
 }
 
 // Advance past spaces and blank lines and return the column of the next significant
-// character. Tabs advance to the next 8-space stop; NBSP counts as a space; \r is
+// character. Tabs advance to the next 8-space stop, NBSP counts as a space, \r is
 // skipped silently so CRLF files behave identically to LF files. EOF (lookahead 0)
 // exits the loop naturally.
 static uint16_t consume_blanks(TSLexer *lexer) {
-    uint16_t indent = 0;
+    uint32_t indent = 0;
     while (true) {
         // Ordered by frequency in real .cabal files: spaces dominate, newlines next
         // (blank-line skipping), tabs occasionally, CR only in CRLF files, NBSP almost
@@ -238,12 +249,11 @@ static uint16_t consume_blanks(TSLexer *lexer) {
             indent = 0;
             lexer->advance(lexer, true);
         } else if (lexer->lookahead == '\t') {
-            // Advance to the next 8-space tab stop.
-            indent = (uint16_t)((indent + 8) & ~(uint16_t)7);
+            indent = (indent + 8) & ~(uint32_t)7;
             lexer->advance(lexer, true);
         } else if (lexer->lookahead == '\r') {
             lexer->advance(lexer, true);
-        } else if (lexer->lookahead == 0x00A0 /* nbsp */) {
+        } else if (lexer->lookahead == NBSP) {
             indent++;
             lexer->advance(lexer, true);
         } else {
@@ -251,75 +261,98 @@ static uint16_t consume_blanks(TSLexer *lexer) {
         }
         STATS_ITER_CONSUME();
     }
-    return indent;
+    return indent > UINT16_MAX ? UINT16_MAX : (uint16_t)indent;
 }
 
-// Serialize scanner state to a byte buffer for tree-sitter's incremental parse cache.
-// All multi-byte values are packed little-endian because the buffer has no alignment
-// guarantee.
+// Wire format for tree-sitter's incremental parse cache.
 //
-// Layout: [pending lo][pending hi][stack_size lo][stack_size hi][eof_flag]
-//         [col[0] lo][col[0] hi] ... one pair per stack entry, up to the buffer limit.
+//   Layout: [pending lo][pending hi][stack_size lo][stack_size hi][eof_flag]
+//           then stack_size pairs of [col lo][col hi].
 //
-// The 5-byte header is always written first. TREE_SITTER_SERIALIZATION_BUFFER_SIZE is
-// 1024, so the header fits without a bounds check. Stack entries are guarded one by one.
+// All multi-byte values are little-endian because the buffer has no alignment
+// guarantee. The buffer is aliased as unsigned char so storing values 128..255
+// is well-defined. Assigning out-of-range values to plain char is
+// implementation-defined per C17 6.3.1.3p3.
+enum {
+    SERIAL_HEADER_BYTES = 5,
+    SERIAL_ENTRY_BYTES = 2,
+    SERIAL_MAX_ENTRIES =
+        (TREE_SITTER_SERIALIZATION_BUFFER_SIZE - SERIAL_HEADER_BYTES) / SERIAL_ENTRY_BYTES,
+};
+
+// stack_size is clamped to the number of entries that fit after the header so
+// the written count never disagrees with the bytes that follow it. The header
+// always fits because TREE_SITTER_SERIALIZATION_BUFFER_SIZE is 1024.
 static unsigned scanner_serialize(void *payload, char *buffer) {
     Scanner *scanner = (Scanner *)payload;
+    unsigned char *buf = (unsigned char *)buffer;
     unsigned size = 0;
 
-    buffer[size++] = (char)(scanner->pending_dedents & 0xFF);
-    buffer[size++] = (char)((scanner->pending_dedents >> 8) & 0xFF);
+    buf[size++] = (unsigned char)(scanner->pending_dedents & 0xFF);
+    buf[size++] = (unsigned char)((scanner->pending_dedents >> 8) & 0xFF);
 
-    uint16_t stack_size = (uint16_t)scanner->indents.size;
-    buffer[size++] = (char)(stack_size & 0xFF);
-    buffer[size++] = (char)((stack_size >> 8) & 0xFF);
+    uint16_t stack_size = scanner->indents.size > SERIAL_MAX_ENTRIES
+                              ? SERIAL_MAX_ENTRIES
+                              : (uint16_t)scanner->indents.size;
+    buf[size++] = (unsigned char)(stack_size & 0xFF);
+    buf[size++] = (unsigned char)((stack_size >> 8) & 0xFF);
 
-    buffer[size++] = (char)(scanner->eof_newline_emitted ? 1 : 0);
+    buf[size++] = (unsigned char)(scanner->eof_newline_emitted ? 1 : 0);
 
-    for (uint32_t i = 0; i < scanner->indents.size; i++) {
+    for (uint16_t i = 0; i < stack_size; i++) {
         uint16_t v = *array_get(&scanner->indents, i);
-        if (size + 2 > TREE_SITTER_SERIALIZATION_BUFFER_SIZE) break;
-        buffer[size++] = (char)(v & 0xFF);
-        buffer[size++] = (char)((v >> 8) & 0xFF);
+        buf[size++] = (unsigned char)(v & 0xFF);
+        buf[size++] = (unsigned char)((v >> 8) & 0xFF);
     }
 
     return size;
 }
 
-// Restore state from the buffer written by scanner_serialize. A buffer shorter than
-// the 5-byte header is treated as fresh state. The guard `pos + 1 < length` ensures
-// two bytes are available before each uint16_t stack read; if the buffer was
-// truncated (stack too deep for 1024 bytes), we stop early. The sentinel 0 is pushed
-// when nothing survived to preserve the invariant that indents is never empty.
+// Restore state from the buffer written by scanner_serialize. The buffer is
+// treated as untrusted input. Anything that violates the indent-stack invariants
+// the rest of the scanner relies on (non-empty, sentinel 0 at the bottom, strictly
+// increasing) causes a reset to fresh state, rather than corruption propagating
+// into unwind_to where it would pop past the sentinel and dereference past the
+// end of the indents array. A buffer shorter than the header is also reset.
 static void scanner_deserialize(void *payload, const char *buffer, unsigned length) {
     Scanner *scanner = (Scanner *)payload;
-    array_clear(&scanner->indents);
-    scanner->pending_dedents = 0;
-    scanner->eof_newline_emitted = false;
+    const unsigned char *buf = (const unsigned char *)buffer;
 
-    if (length < 5) {
-        array_push(&scanner->indents, 0);
+    if (length < SERIAL_HEADER_BYTES) {
+        scanner_reset(scanner);
         return;
     }
 
+    array_clear(&scanner->indents);
+
     unsigned pos = 0;
-    uint16_t pending = (uint8_t)buffer[pos++];
-    pending |= ((uint16_t)(uint8_t)buffer[pos++]) << 8;
+    uint16_t pending = buf[pos++];
+    pending |= ((uint16_t)buf[pos++]) << 8;
     scanner->pending_dedents = pending;
 
-    uint16_t stack_size = (uint8_t)buffer[pos++];
-    stack_size |= ((uint16_t)(uint8_t)buffer[pos++]) << 8;
+    uint16_t stack_size = buf[pos++];
+    stack_size |= ((uint16_t)buf[pos++]) << 8;
 
-    scanner->eof_newline_emitted = buffer[pos++] != 0;
+    scanner->eof_newline_emitted = buf[pos++] != 0;
 
-    for (uint16_t i = 0; i < stack_size && pos + 1 < length; i++) {
-        uint16_t v = (uint8_t)buffer[pos++];
-        v |= ((uint16_t)(uint8_t)buffer[pos++]) << 8;
+    for (uint16_t i = 0; i < stack_size && pos + SERIAL_ENTRY_BYTES <= length; i++) {
+        uint16_t v = buf[pos++];
+        v |= ((uint16_t)buf[pos++]) << 8;
         array_push(&scanner->indents, v);
     }
 
-    if (scanner->indents.size == 0) {
-        array_push(&scanner->indents, 0);
+    // unwind_to terminates because the bottom is 0 (indent < 0 is impossible for
+    // uint16_t), and every push site only ever pushes a value strictly greater
+    // than the current top.
+    bool valid = scanner->indents.size > 0 && *array_get(&scanner->indents, 0) == 0;
+    for (uint32_t i = 1; valid && i < scanner->indents.size; i++) {
+        if (*array_get(&scanner->indents, i) <=
+            *array_get(&scanner->indents, i - 1)) {
+            valid = false;
+        }
+    }
+    if (!valid) {
+        scanner_reset(scanner);
     }
 }
 
@@ -397,7 +430,7 @@ static bool scanner_scan(void *payload, TSLexer *lexer, const bool *valid_symbol
     // rule references it), so that branch is effectively cabal-only.
     if (valid_symbols[SECTION_NAME] || valid_symbols[FIELD_NAME]) {
         while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-               lexer->lookahead == '\r' || lexer->lookahead == 0x00A0) {
+               lexer->lookahead == '\r' || lexer->lookahead == NBSP) {
             lexer->advance(lexer, true);
         }
         if (is_name_start(lexer->lookahead)) {
