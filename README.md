@@ -38,4 +38,4 @@ The `test` target includes a corpus parse over the same test set from the Cabal 
 
 ------------------------------------------------------
 
-Disclaimer: Co-produced with a coding agent.
+Disclaimer: co-produced with a coding agent.
