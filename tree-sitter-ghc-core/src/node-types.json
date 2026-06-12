@@ -175,6 +175,10 @@
         "required": true,
         "types": [
           {
+            "type": "paren_operator",
+            "named": true
+          },
+          {
             "type": "variable",
             "named": true
           }
@@ -1155,6 +1159,21 @@
     }
   },
   {
+    "type": "paren_operator",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "operator",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "parens",
     "named": true,
     "fields": {},
@@ -1843,6 +1862,10 @@
         },
         {
           "type": "operator",
+          "named": true
+        },
+        {
+          "type": "paren_operator",
           "named": true
         },
         {

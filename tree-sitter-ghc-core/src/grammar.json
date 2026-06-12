@@ -285,7 +285,7 @@
           "name": "name",
           "content": {
             "type": "SYMBOL",
-            "name": "variable"
+            "name": "_def_name"
           }
         },
         {
@@ -314,7 +314,7 @@
       "members": [
         {
           "type": "SYMBOL",
-          "name": "variable"
+          "name": "_def_name"
         },
         {
           "type": "CHOICE",
@@ -335,6 +335,36 @@
         {
           "type": "SYMBOL",
           "name": "_type"
+        }
+      ]
+    },
+    "_def_name": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "variable"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "paren_operator"
+        }
+      ]
+    },
+    "paren_operator": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "("
+        },
+        {
+          "type": "SYMBOL",
+          "name": "operator"
+        },
+        {
+          "type": "STRING",
+          "value": ")"
         }
       ]
     },
@@ -2046,6 +2076,10 @@
     [
       "source_file",
       "trailing_sections"
+    ],
+    [
+      "idinfo",
+      "_soup"
     ]
   ],
   "precedences": [],

@@ -49,6 +49,10 @@ export default grammar({
     // A leading banner may attach to the header or start a trailing section;
     // either parses cleanly, so let GLR pick.
     [$.source_file, $.trailing_sections],
+    // A `[..]` before a `(` is an IdInfo bracket on an operator binding
+    // (`[GblId] (+++) = ..`) or trailing-rule soup (`"r" [1] (@a)..`); GLR's
+    // viability picks (a rule's `(@a)` is not a paren_operator).
+    [$.idinfo, $._soup],
   ],
 
   rules: {
@@ -109,14 +113,19 @@ export default grammar({
       seq(
         optional(field("signature", $.type_signature)),
         optional(field("info", $.idinfo)),
-        field("name", $.variable),
+        field("name", $._def_name),
         repeat($._binder),
         "=",
         field("rhs", $._expr),
       ),
 
     type_signature: ($) =>
-      seq($.variable, optional($.binder_annotation), "::", $._type),
+      seq($._def_name, optional($.binder_annotation), "::", $._type),
+
+    // A defined name: an ordinary id, or an operator printed in prefix form
+    // ((+++), (.)) -- GHC parenthesises operator-named top-level binders.
+    _def_name: ($) => choice($.variable, $.paren_operator),
+    paren_operator: ($) => seq("(", $.operator, ")"),
 
     // The [IdInfo] bracket (GblId, Arity=N, Str=<..>, Cpr=.., Unf=Unf{..Tmpl=e},
     // RULES: ..). Modelled coarsely as balanced delimiter soup for now; the

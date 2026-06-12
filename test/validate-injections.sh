@@ -73,7 +73,6 @@ declare -A known_gaps=(
     [should_compile_T23083_1]="CorePrep is a second Core pass; ghc-core models Tidy Core"
     [should_compile_prof-late-cc3_2]="CorePrep is a second Core pass; ghc-core models Tidy Core"
     [should_compile_T13588_2]="pre-unarise STG omits the binding-terminating ; that ghc-stg requires"
-    [printer_T18052a_1]="top-level operator bindings ((+++) = ..); ghc-core printer edge case"
     [should_compile_T26615_1]="1900-line two-pass dump; trailing imported-rules dash-section"
 )
 
