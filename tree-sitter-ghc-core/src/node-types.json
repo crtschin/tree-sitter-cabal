@@ -436,6 +436,10 @@
           "named": true
         },
         {
+          "type": "ellipsis",
+          "named": true
+        },
+        {
           "type": "forall_type",
           "named": true
         },
@@ -537,6 +541,10 @@
           "named": true
         },
         {
+          "type": "ellipsis",
+          "named": true
+        },
+        {
           "type": "forall_type",
           "named": true
         },
@@ -593,6 +601,10 @@
       "types": [
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "ellipsis",
           "named": true
         },
         {
@@ -653,6 +665,10 @@
       "types": [
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "ellipsis",
           "named": true
         },
         {
@@ -758,6 +774,10 @@
           "named": true
         },
         {
+          "type": "ellipsis",
+          "named": true
+        },
+        {
           "type": "promoted_type",
           "named": true
         },
@@ -794,6 +814,10 @@
       "types": [
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "ellipsis",
           "named": true
         },
         {
@@ -1037,6 +1061,10 @@
       "types": [
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "ellipsis",
           "named": true
         },
         {
@@ -1416,6 +1444,10 @@
           "named": true
         },
         {
+          "type": "ellipsis",
+          "named": true
+        },
+        {
           "type": "kind_app",
           "named": true
         },
@@ -1463,6 +1495,10 @@
           "named": true
         },
         {
+          "type": "ellipsis",
+          "named": true
+        },
+        {
           "type": "promoted_type",
           "named": true
         },
@@ -1499,6 +1535,10 @@
       "types": [
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "ellipsis",
           "named": true
         },
         {
@@ -1553,6 +1593,10 @@
           "named": true
         },
         {
+          "type": "ellipsis",
+          "named": true
+        },
+        {
           "type": "forall_type",
           "named": true
         },
@@ -1601,6 +1645,10 @@
       "types": [
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "ellipsis",
           "named": true
         },
         {
@@ -1656,6 +1704,10 @@
         },
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "ellipsis",
           "named": true
         },
         {
@@ -1715,6 +1767,10 @@
         },
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "ellipsis",
           "named": true
         },
         {
@@ -1859,6 +1915,10 @@
           "named": true
         },
         {
+          "type": "ellipsis",
+          "named": true
+        },
+        {
           "type": "forall_type",
           "named": true
         },
@@ -1996,6 +2056,10 @@
   },
   {
     "type": "constructor",
+    "named": true
+  },
+  {
+    "type": "ellipsis",
     "named": true
   },
   {

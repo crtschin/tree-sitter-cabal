@@ -274,8 +274,10 @@ export default grammar({
         $.unboxed_type,
         $.promoted_type,
         $.star, // the `*` kind (e.g. forall (t :: * -> *). ..)
+        $.ellipsis, // `...` -- an elided type, e.g. a coercion type under -dsuppress-coercion-types
       ),
     star: ($) => "*",
+    ellipsis: ($) => "...",
 
     tyvar: ($) => $.variable,
 

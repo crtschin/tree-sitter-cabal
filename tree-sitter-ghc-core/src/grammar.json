@@ -1650,12 +1650,20 @@
         {
           "type": "SYMBOL",
           "name": "star"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "ellipsis"
         }
       ]
     },
     "star": {
       "type": "STRING",
       "value": "*"
+    },
+    "ellipsis": {
+      "type": "STRING",
+      "value": "..."
     },
     "tyvar": {
       "type": "SYMBOL",
