@@ -7,18 +7,22 @@
 /// <reference types="tree-sitter-cli/dsl" />
 // @ts-check
 
-// Models the System FC surface GHC's Core printer emits (compiler/GHC/Core/Ppr.hs).
-// Expressions are fully brace/keyword-delimited; the top-level layout (each
-// binding / Rec marker starts in column 0, continuations are indented) is
-// recovered by the external scanner's _item_sep token (src/scanner.c).
+// Models the System FC surface GHC's Core printer emits (compiler/GHC/Core/Ppr.hs,
+// compiler/GHC/Iface/Type.hs). Expressions are fully brace/keyword-delimited; the
+// top-level layout (each binding / type signature / Rec marker starts in column
+// 0, continuations are indented) is recovered by the external scanner's
+// _item_sep token (src/scanner.c), which also bounds a multi-line type signature
+// from the binding line that follows it.
 //
-// Coverage so far targets the structural surface of a `-dsuppress-all` dump:
-// bindings, Rec groups, and the expression grammar (lambda, application,
-// let/letrec/join/joinrec, jump, case + alternatives, literals). Type
-// signatures, the [IdInfo] bracket, qualified names, casts/coercions, ticks and
-// typed/@-binders are not modelled yet -- see README.md.
+// Coverage (plan layer A): bindings with optional type signatures, Rec groups,
+// the expression grammar (lambda, application incl. @type args, let/letrec/join/
+// joinrec, jump, case + alternatives, literals, tuples), qualified names, and a
+// type grammar (forall, contexts, arrows incl. multiplicity, application,
+// lists/tuples/kinds/promotion/equality). The [IdInfo] bracket, casts/coercions,
+// ticks and Occ-annotated binders are layers B-D -- see README.md.
 
 const sepBy1 = (sep, rule) => seq(rule, repeat(seq(sep, rule)));
+const sepBy = (sep, rule) => optional(sepBy1(sep, rule));
 
 export default grammar({
   name: "ghc_core",
@@ -28,6 +32,11 @@ export default grammar({
   extras: ($) => [/[ \t\r\n\f]/, $.comment],
 
   word: ($) => $.variable,
+
+  // After a signature's type, the next `variable` is either a type-application
+  // argument or the binding name on the next line. Let GLR explore both; the
+  // over-munch branch dies because the binding then can't complete.
+  conflicts: ($) => [[$._type, $.type_apply]],
 
   rules: {
     source_file: ($) => repeat(seq($._top_item, $._item_sep)),
@@ -41,30 +50,38 @@ export default grammar({
     //   = {terms: 182, types: 90, coercions: 0, joins: 4/8}
     result_size: ($) => token(/Result size of[^{]*\{[^}]*\}/),
 
-    // Rec { <binding>; ... end Rec }
+    // Rec bindings are blank-line separated (ITEM_SEP); `Rec {` abuts the first
+    // and `end Rec }` abuts the last (single newlines, no ITEM_SEP).
     rec_block: ($) =>
-      seq(
-        "Rec",
-        "{",
-        $._item_sep,
-        sepBy1($._item_sep, $.binding),
-        $._item_sep,
-        "end",
-        "Rec",
-        "}",
-      ),
+      seq("Rec", "{", sepBy1($._item_sep, $.binding), "end", "Rec", "}"),
 
-    // A top-level, let-bound, or join binding: `name <binders> = rhs`. The
-    // binders are the join-point parameters (empty for ordinary bindings).
+    // A binding, optionally preceded by its type signature (a single newline
+    // away -- same binding group, no ITEM_SEP). The binders are join-point
+    // parameters (empty for ordinary bindings). A multi-line signature type is
+    // bounded by where the binding `name` parses (GLR), since no token separates
+    // them.
     binding: ($) =>
       seq(
+        optional(field("signature", $.type_signature)),
         field("name", $.variable),
         repeat($._binder),
         "=",
         field("rhs", $._expr),
       ),
 
-    _binder: ($) => $.variable,
+    type_signature: ($) => seq($.variable, "::", $._type),
+
+    _binder: ($) => choice($.variable, $.typed_binder, $.type_binder),
+
+    typed_binder: ($) => seq("(", $.variable, "::", $._type, ")"),
+
+    // Lambda-bound type variables: @a, @{a} (inferred), (@ a).
+    type_binder: ($) =>
+      choice(
+        seq("@", $._type_atom),
+        seq("@", "{", $._type, "}"),
+        seq("(", "@", $._type, ")"),
+      ),
 
     _expr: ($) =>
       choice($.lambda, $.let, $.case, $.jump, $.application, $._atom),
@@ -77,19 +94,23 @@ export default grammar({
         $.literal,
         $.special_con,
         $.parens,
+        $.tuple,
+        $.unboxed_tuple,
       ),
 
     parens: ($) => seq("(", $._expr, ")"),
+    tuple: ($) => seq("(", $._expr, repeat1(seq(",", $._expr)), ")"),
+    unboxed_tuple: ($) => seq("(#", sepBy(",", $._expr), "#)"),
 
-    application: ($) => prec.left(seq($._atom, repeat1($._atom))),
+    application: ($) => prec.left(seq($._atom, repeat1($._arg))),
+
+    _arg: ($) => choice($._atom, $.type_arg),
+    type_arg: ($) => seq("@", $._type_atom),
 
     lambda: ($) => seq("\\", repeat1($._binder), "->", $._expr),
 
-    // jump j a1 ... an  (a tail call to a join point; see ppr_id_occ)
-    jump: ($) => seq("jump", $.variable, repeat($._atom)),
+    jump: ($) => seq("jump", $.variable, repeat($._arg)),
 
-    // <kw> { binds } in body. let/join bind one; letrec/joinrec bind a
-    // semicolon-terminated group (ppr_bind appends `;` per Rec binding).
     let: ($) =>
       seq(
         field("kind", choice("let", "letrec", "join", "joinrec")),
@@ -107,7 +128,7 @@ export default grammar({
         "of",
         field("binder", optional($.variable)),
         "{",
-        optional(sepBy1(";", $.alternative)),
+        sepBy(";", $.alternative),
         "}",
       ),
 
@@ -127,13 +148,81 @@ export default grammar({
     _char_lit: ($) => token(/'(\\.|[^'\\])'#*/),
     _string_lit: ($) => token(/"(\\.|[^"\\])*"#*/),
 
-    // Lower/underscore/$-led names (variables, wildcards, $w-workers, joins).
-    variable: ($) => /[a-z_$][A-Za-z0-9_'$]*/,
-    // Upper-led data constructors and worker names (I#, TrNameS, True).
-    constructor: ($) => /[A-Z][A-Za-z0-9_']*#?/,
+    // ---- types (compiler/GHC/Iface/Type.hs) ----
+
+    _type: ($) => choice($.forall_type, $.function_type, $._type_btype),
+
+    forall_type: ($) =>
+      prec.right(
+        seq(
+          choice("forall", "∀"),
+          repeat1($._forall_binder),
+          choice(".", "->", "→"),
+          $._type,
+        ),
+      ),
+    _forall_binder: ($) => choice($.tyvar, $.kinded_tyvar),
+    kinded_tyvar: ($) => seq("(", $.tyvar, "::", $._type, ")"),
+
+    function_type: ($) => prec.right(seq($._type_btype, $._type_op, $._type)),
+    _type_op: ($) =>
+      choice("->", "→", "⊸", "=>", "⇒", "~", "~#", "~~", "~R#", $.mult_arrow),
+    mult_arrow: ($) => seq("%", $._type_atom, choice("->", "→")),
+
+    _type_btype: ($) => choice($.type_apply, $._type_atom),
+    type_apply: ($) =>
+      prec.left(seq($._type_btype, choice($._type_atom, $.kind_app))),
+    kind_app: ($) => seq("@", $._type_atom),
+
+    _type_atom: ($) =>
+      choice(
+        $.constructor,
+        $.tyvar,
+        $._type_literal,
+        $.type_list,
+        $.type_paren_form,
+        $.unboxed_type,
+        $.promoted_type,
+      ),
+
+    tyvar: ($) => $.variable,
+
+    _type_literal: ($) => choice(token(/[0-9]+/), token(/"(\\.|[^"\\])*"/)),
+
+    type_list: ($) => seq("[", sepBy(",", $._type), "]"),
+
+    // Covers (), (t), (t, u, ...) and the kind signature (t :: k).
+    type_paren_form: ($) =>
+      seq(
+        "(",
+        optional(
+          seq($._type, repeat(seq(",", $._type)), optional(seq("::", $._type))),
+        ),
+        ")",
+      ),
+
+    // (# t, ... #) unboxed tuple and (# t | ... #) unboxed sum.
+    unboxed_type: ($) =>
+      seq(
+        "(#",
+        optional(seq($._type, repeat(seq(choice(",", "|"), $._type)))),
+        "#)",
+      ),
+
+    promoted_type: ($) =>
+      seq(
+        "'",
+        choice($.constructor, $.special_con, $.type_list, $.type_paren_form),
+      ),
+
+    // ---- lexical ----
+
+    // Optional `Module.Sub.` qualifier, then a lower/underscore/$-led name.
+    variable: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[a-z_$][A-Za-z0-9_'$]*#*/),
+    // Qualified upper-led data constructors / worker names (I#, GHC.Types.I#).
+    constructor: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[A-Z][A-Za-z0-9_']*#*/),
     // Symbolic primops used in prefix position (+#, *#, ==#, ># ...).
-    operator: ($) => token(/[-+*/<>=~!&|^%]+#*/),
-    // Built-in list constructors.
+    operator: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[-+*/<>=!&|^%]+#*/),
     special_con: ($) => choice("[]", ":"),
 
     comment: ($) => token(seq("--", /[^\n]*/)),

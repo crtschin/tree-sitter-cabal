@@ -3,6 +3,7 @@ Banner and result size
 ================================
 
 ==================== Tidy Core ====================
+
 Result size of Tidy Core = {terms: 1, types: 0, coercions: 0, joins: 0/0}
 
 --------------------------------
@@ -16,6 +17,7 @@ Literal and application bindings
 ================================
 
 x = "main"#
+
 y = TrNameS x
 
 --------------------------------
@@ -111,3 +113,71 @@ end Rec }
         (jump
           (variable)
           (variable))))))
+
+================================
+Binding with function-type signature
+================================
+
+f :: GHC.Types.Int -> Int
+f = \ x -> x
+
+--------------------------------
+
+(source_file
+  (binding
+    signature: (type_signature
+      (variable)
+      (function_type
+        (constructor)
+        (constructor)))
+    name: (variable)
+    rhs: (lambda
+      (variable)
+      (variable))))
+
+================================
+Typed binder and type application
+================================
+
+k = \ (x :: Int) -> f @Int x
+
+--------------------------------
+
+(source_file
+  (binding
+    name: (variable)
+    rhs: (lambda
+      (typed_binder
+        (variable)
+        (constructor))
+      (application
+        (variable)
+        (type_arg
+          (constructor))
+        (variable)))))
+
+================================
+Forall signature and tuple
+================================
+
+p :: forall a. (a, a)
+p = (x, y)
+
+--------------------------------
+
+(source_file
+  (binding
+    signature: (type_signature
+      (variable)
+      (forall_type
+        (tyvar
+          (variable))
+        (type_paren_form
+          (tyvar
+            (variable))
+          (tyvar
+            (variable)))))
+    name: (variable)
+    rhs: (tuple
+      (variable)
+      (variable))))

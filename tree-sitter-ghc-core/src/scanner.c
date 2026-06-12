@@ -1,15 +1,17 @@
 #include "tree_sitter/parser.h"
 
-// Layout scanner for GHC Core dumps. GHC prints each top-level logical line --
-// a `-- RHS size` comment, a `name :: type` signature, an `[IdInfo]` bracket, a
-// `name = rhs` binding, and the `Rec {` / `end Rec }` markers -- starting in
-// column 0, while their continuations (wrapped types, multi-line IdInfo, the
-// indented RHS expression) are indented. Expression bodies are otherwise fully
-// brace/keyword-delimited, so the only thing the grammar can't see is the
-// column. This scanner emits ITEM_SEP at a newline that is followed by a
-// column-0 non-blank character (or at end of input), which the grammar uses to
-// terminate each top-level item; an indented continuation produces no token, so
-// the item keeps going. The scanner is stateless.
+// Layout scanner for GHC Core dumps. GHC separates top-level items -- the
+// banner, the Result-size header, each binding *group* (its `-- RHS size`
+// comment, `name :: type` signature, `[IdInfo]` bracket and `name = rhs` line),
+// and the Rec bindings -- with a BLANK line, while the lines within a group, and
+// an expression body's continuations, use single newlines (and indentation).
+//
+// So the one thing the grammar can't see is "a blank line precedes the next
+// item". This scanner emits ITEM_SEP at a blank line (>= 2 newlines) before
+// column-0 content, or at end of input. A single newline (a within-group line or
+// an indented continuation) yields no token, so the item keeps going; the
+// signature/binding lines inside a group flow together and a multi-line type is
+// bounded by where the binding name parses, not by a token. Stateless.
 
 enum TokenType {
     ITEM_SEP,
@@ -26,14 +28,14 @@ bool tree_sitter_ghc_core_external_scanner_scan(void *payload, TSLexer *lexer,
         return false;
     }
 
-    // Consume blanks and newlines as part of the token. We need at least one
-    // newline (so we don't fire between tokens on the same line) and then
-    // either column 0 (a new top-level line) or end of input.
-    bool saw_newline = false;
+    // Consume blanks and newlines as part of the token. A group boundary is a
+    // blank line (>= 2 newlines) before column-0 content; a single newline is a
+    // within-group line or a continuation and must NOT fire.
+    int newlines = 0;
     bool consumed = false;
     for (;;) {
         if (lexer->lookahead == '\n') {
-            saw_newline = true;
+            newlines++;
             consumed = true;
             lexer->advance(lexer, false);
         } else if (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
@@ -56,7 +58,7 @@ bool tree_sitter_ghc_core_external_scanner_scan(void *payload, TSLexer *lexer,
         return false;
     }
 
-    if (saw_newline && lexer->get_column(lexer) == 0) {
+    if (newlines >= 2 && lexer->get_column(lexer) == 0) {
         lexer->mark_end(lexer);
         lexer->result_symbol = ITEM_SEP;
         return true;
