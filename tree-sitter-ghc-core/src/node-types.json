@@ -26,6 +26,10 @@
             "named": true
           },
           {
+            "type": "cast",
+            "named": true
+          },
+          {
             "type": "constructor",
             "named": true
           },
@@ -55,6 +59,10 @@
           },
           {
             "type": "special_con",
+            "named": true
+          },
+          {
+            "type": "tick_expr",
             "named": true
           },
           {
@@ -100,6 +108,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "coercion_arg",
+          "named": true
+        },
         {
           "type": "constructor",
           "named": true
@@ -181,6 +193,10 @@
             "named": true
           },
           {
+            "type": "cast",
+            "named": true
+          },
+          {
             "type": "constructor",
             "named": true
           },
@@ -210,6 +226,10 @@
           },
           {
             "type": "special_con",
+            "named": true
+          },
+          {
+            "type": "tick_expr",
             "named": true
           },
           {
@@ -291,6 +311,10 @@
             "named": true
           },
           {
+            "type": "cast",
+            "named": true
+          },
+          {
             "type": "constructor",
             "named": true
           },
@@ -323,6 +347,10 @@
             "named": true
           },
           {
+            "type": "tick_expr",
+            "named": true
+          },
+          {
             "type": "tuple",
             "named": true
           },
@@ -343,6 +371,119 @@
       "types": [
         {
           "type": "alternative",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "cast",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "coercion",
+          "named": true
+        },
+        {
+          "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "literal",
+          "named": true
+        },
+        {
+          "type": "operator",
+          "named": true
+        },
+        {
+          "type": "parens",
+          "named": true
+        },
+        {
+          "type": "special_con",
+          "named": true
+        },
+        {
+          "type": "tuple",
+          "named": true
+        },
+        {
+          "type": "unboxed_tuple",
+          "named": true
+        },
+        {
+          "type": "variable",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "coercion",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "forall_type",
+          "named": true
+        },
+        {
+          "type": "function_type",
+          "named": true
+        },
+        {
+          "type": "promoted_type",
+          "named": true
+        },
+        {
+          "type": "star",
+          "named": true
+        },
+        {
+          "type": "type_apply",
+          "named": true
+        },
+        {
+          "type": "type_list",
+          "named": true
+        },
+        {
+          "type": "type_paren_form",
+          "named": true
+        },
+        {
+          "type": "tyvar",
+          "named": true
+        },
+        {
+          "type": "unboxed_type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "coercion_arg",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "coercion",
           "named": true
         }
       ]
@@ -404,11 +545,19 @@
           "named": true
         },
         {
+          "type": "inferred_tyvar",
+          "named": true
+        },
+        {
           "type": "kinded_tyvar",
           "named": true
         },
         {
           "type": "promoted_type",
+          "named": true
+        },
+        {
+          "type": "star",
           "named": true
         },
         {
@@ -463,6 +612,10 @@
           "named": true
         },
         {
+          "type": "star",
+          "named": true
+        },
+        {
           "type": "type_apply",
           "named": true
         },
@@ -491,6 +644,57 @@
     "fields": {}
   },
   {
+    "type": "inferred_tyvar",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "forall_type",
+          "named": true
+        },
+        {
+          "type": "function_type",
+          "named": true
+        },
+        {
+          "type": "promoted_type",
+          "named": true
+        },
+        {
+          "type": "star",
+          "named": true
+        },
+        {
+          "type": "type_apply",
+          "named": true
+        },
+        {
+          "type": "type_list",
+          "named": true
+        },
+        {
+          "type": "type_paren_form",
+          "named": true
+        },
+        {
+          "type": "tyvar",
+          "named": true
+        },
+        {
+          "type": "unboxed_type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "jump",
     "named": true,
     "fields": {},
@@ -498,6 +702,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "coercion_arg",
+          "named": true
+        },
         {
           "type": "constructor",
           "named": true
@@ -554,6 +762,10 @@
           "named": true
         },
         {
+          "type": "star",
+          "named": true
+        },
+        {
           "type": "type_list",
           "named": true
         },
@@ -594,6 +806,10 @@
         },
         {
           "type": "promoted_type",
+          "named": true
+        },
+        {
+          "type": "star",
           "named": true
         },
         {
@@ -640,6 +856,10 @@
           "named": true
         },
         {
+          "type": "cast",
+          "named": true
+        },
+        {
           "type": "constructor",
           "named": true
         },
@@ -669,6 +889,10 @@
         },
         {
           "type": "special_con",
+          "named": true
+        },
+        {
+          "type": "tick_expr",
           "named": true
         },
         {
@@ -711,6 +935,10 @@
             "named": true
           },
           {
+            "type": "cast",
+            "named": true
+          },
+          {
             "type": "constructor",
             "named": true
           },
@@ -740,6 +968,10 @@
           },
           {
             "type": "special_con",
+            "named": true
+          },
+          {
+            "type": "tick_expr",
             "named": true
           },
           {
@@ -812,6 +1044,10 @@
           "named": true
         },
         {
+          "type": "star",
+          "named": true
+        },
+        {
           "type": "type_list",
           "named": true
         },
@@ -847,6 +1083,10 @@
           "named": true
         },
         {
+          "type": "cast",
+          "named": true
+        },
+        {
           "type": "constructor",
           "named": true
         },
@@ -879,6 +1119,10 @@
           "named": true
         },
         {
+          "type": "tick_expr",
+          "named": true
+        },
+        {
           "type": "tuple",
           "named": true
         },
@@ -907,6 +1151,10 @@
         },
         {
           "type": "literal",
+          "named": true
+        },
+        {
+          "type": "tuple_pattern",
           "named": true
         }
       ]
@@ -983,12 +1231,7 @@
     }
   },
   {
-    "type": "special_con",
-    "named": true,
-    "fields": {}
-  },
-  {
-    "type": "tuple",
+    "type": "tick_expr",
     "named": true,
     "fields": {},
     "children": {
@@ -1001,6 +1244,10 @@
         },
         {
           "type": "case",
+          "named": true
+        },
+        {
+          "type": "cast",
           "named": true
         },
         {
@@ -1036,11 +1283,117 @@
           "named": true
         },
         {
+          "type": "tick_expr",
+          "named": true
+        },
+        {
+          "type": "tickish",
+          "named": true
+        },
+        {
           "type": "tuple",
           "named": true
         },
         {
           "type": "unboxed_tuple",
+          "named": true
+        },
+        {
+          "type": "variable",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "tuple",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "application",
+          "named": true
+        },
+        {
+          "type": "case",
+          "named": true
+        },
+        {
+          "type": "cast",
+          "named": true
+        },
+        {
+          "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "jump",
+          "named": true
+        },
+        {
+          "type": "lambda",
+          "named": true
+        },
+        {
+          "type": "let",
+          "named": true
+        },
+        {
+          "type": "literal",
+          "named": true
+        },
+        {
+          "type": "operator",
+          "named": true
+        },
+        {
+          "type": "parens",
+          "named": true
+        },
+        {
+          "type": "special_con",
+          "named": true
+        },
+        {
+          "type": "tick_expr",
+          "named": true
+        },
+        {
+          "type": "tuple",
+          "named": true
+        },
+        {
+          "type": "unboxed_tuple",
+          "named": true
+        },
+        {
+          "type": "variable",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "tuple_pattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "annotated_binder",
+          "named": true
+        },
+        {
+          "type": "type_binder",
+          "named": true
+        },
+        {
+          "type": "typed_binder",
           "named": true
         },
         {
@@ -1068,6 +1421,10 @@
         },
         {
           "type": "promoted_type",
+          "named": true
+        },
+        {
+          "type": "star",
           "named": true
         },
         {
@@ -1107,6 +1464,10 @@
         },
         {
           "type": "promoted_type",
+          "named": true
+        },
+        {
+          "type": "star",
           "named": true
         },
         {
@@ -1150,6 +1511,10 @@
         },
         {
           "type": "promoted_type",
+          "named": true
+        },
+        {
+          "type": "star",
           "named": true
         },
         {
@@ -1200,6 +1565,10 @@
           "named": true
         },
         {
+          "type": "star",
+          "named": true
+        },
+        {
           "type": "type_apply",
           "named": true
         },
@@ -1244,6 +1613,10 @@
         },
         {
           "type": "promoted_type",
+          "named": true
+        },
+        {
+          "type": "star",
           "named": true
         },
         {
@@ -1295,6 +1668,10 @@
         },
         {
           "type": "promoted_type",
+          "named": true
+        },
+        {
+          "type": "star",
           "named": true
         },
         {
@@ -1350,6 +1727,10 @@
         },
         {
           "type": "promoted_type",
+          "named": true
+        },
+        {
+          "type": "star",
           "named": true
         },
         {
@@ -1411,6 +1792,10 @@
           "named": true
         },
         {
+          "type": "cast",
+          "named": true
+        },
+        {
           "type": "constructor",
           "named": true
         },
@@ -1440,6 +1825,10 @@
         },
         {
           "type": "special_con",
+          "named": true
+        },
+        {
+          "type": "tick_expr",
           "named": true
         },
         {
@@ -1479,6 +1868,10 @@
         },
         {
           "type": "promoted_type",
+          "named": true
+        },
+        {
+          "type": "star",
           "named": true
         },
         {
@@ -1541,10 +1934,6 @@
     "named": false
   },
   {
-    "type": ":",
-    "named": false
-  },
-  {
     "type": "::",
     "named": false
   },
@@ -1565,15 +1954,15 @@
     "named": false
   },
   {
+    "type": "@~",
+    "named": false
+  },
+  {
     "type": "Rec",
     "named": false
   },
   {
     "type": "[",
-    "named": false
-  },
-  {
-    "type": "[]",
     "named": false
   },
   {
@@ -1586,6 +1975,10 @@
   },
   {
     "type": "__DEFAULT",
+    "named": false
+  },
+  {
+    "type": "`cast`",
     "named": false
   },
   {
@@ -1647,6 +2040,18 @@
   },
   {
     "type": "result_size",
+    "named": true
+  },
+  {
+    "type": "special_con",
+    "named": true
+  },
+  {
+    "type": "star",
+    "named": true
+  },
+  {
+    "type": "tickish",
     "named": true
   },
   {

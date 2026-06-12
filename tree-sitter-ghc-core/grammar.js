@@ -19,10 +19,13 @@
 // @type args, let/letrec/join/joinrec, jump, case + alternatives, literals,
 // tuples), qualified names, a type grammar (forall, contexts, arrows incl.
 // multiplicity, application, lists/tuples/kinds/promotion/equality), and
-// occurrence-annotated binders. The [IdInfo] bracket is modelled coarsely as
-// balanced delimiter soup (its Tmpl= template is real Core to recurse into
-// later). Casts/coercions, ticks, and display modes (-dppr-debug, unicode,
-// -dppr-case-as-let) are layers C-D -- see README.md.
+// occurrence-annotated binders, casts (e `cast` co), coercions (paren/bare,
+// with their `:: t1 ~role# t2`), ticks (src<..>), tuple patterns and qualified
+// special constructors. The [IdInfo] bracket and coercion bodies are modelled
+// coarsely as balanced delimiter soup (the Tmpl= template and coercion forms are
+// real Core to recurse into later). Display-mode edges (-dppr-debug, full
+// unicode, -dppr-case-as-let, RULES/SPEC, library type operators) are layer D --
+// see README.md.
 
 const sepBy1 = (sep, rule) => seq(rule, repeat(seq(sep, rule)));
 const sepBy = (sep, rule) => optional(sepBy1(sep, rule));
@@ -42,18 +45,30 @@ export default grammar({
   conflicts: ($) => [[$._type, $.type_apply]],
 
   rules: {
-    source_file: ($) => repeat(seq($._top_item, $._item_sep)),
+    // Optional banner + Result-size header (which may abut, as in harvested
+    // stderr, or be blank-separated, as in -ddump-to-file output), then the
+    // binding groups, which ARE blank-separated by _item_sep (that separator
+    // also bounds each binding's RHS expression).
+    source_file: ($) =>
+      seq(
+        optional($.banner),
+        optional($._item_sep),
+        optional($.result_size),
+        optional($._item_sep),
+        sepBy($._item_sep, $._group),
+        optional($._item_sep),
+      ),
 
-    _top_item: ($) => choice($.banner, $.result_size, $.rec_block, $.binding),
+    _group: ($) => choice($.binding, $.rec_block),
 
     // ==================== Tidy Core ====================
     banner: ($) => token(prec(1, /={4,}[^\n]*={4,}/)),
 
     // Result size of Tidy Core
     //   = {terms: 182, types: 90, coercions: 0, joins: 4/8}
-    // "Result size of Tidy Core = {..}" -- the pass description may itself carry
-    // a `{..}` record (e.g. Float out(FOS {..})), so allow one before the size.
-    result_size: ($) => token(/Result size of[^{]*(\{[^{}]*\}[^{]*)?\{[^}]*\}/),
+    // (A pass description containing its own `{..}`, e.g. Float out(FOS {..}),
+    // isn't handled here yet -- a -ddump-float-out-only concern.)
+    result_size: ($) => token(/Result size of[^{]*\{[^}]*\}/),
 
     // Rec bindings are blank-line separated (ITEM_SEP); `Rec {` abuts the first
     // and `end Rec }` abuts the last (single newlines, no ITEM_SEP).
@@ -113,7 +128,42 @@ export default grammar({
       ),
 
     _expr: ($) =>
-      choice($.lambda, $.let, $.case, $.jump, $.application, $._atom),
+      choice(
+        $.lambda,
+        $.let,
+        $.case,
+        $.jump,
+        $.cast,
+        $.tick_expr,
+        $.application,
+        $._atom,
+      ),
+
+    // e `cast` co  (compiler/GHC/Core/Ppr.hs ppr_expr Cast).
+    cast: ($) => prec.left(seq($._atom, "`cast`", $.coercion)),
+
+    // <tickish> e  -- source notes (src<..>) from -g3, cost-centre ticks, etc.
+    tick_expr: ($) => seq($.tickish, $._expr),
+    tickish: ($) => token(/(src|tick|scc)<[^>]*>/),
+
+    // A coercion: `(co :: t1 ~role# t2)` unsuppressed, or a bare atom -- the
+    // suppressed `<Co:N>` (optionally with its `:: type`) or a Refl `<ty>_N`.
+    // The body is coarse balanced soup for now (Sym/Sub/Trans/axioms/SelCo/
+    // forall-co/function-co); angle brackets are atoms, not delimiters (the
+    // function-coercion arrow `->_R` carries a lone `>`), so only () and [] nest.
+    coercion: ($) =>
+      choice(
+        seq("(", repeat($._co_soup), ")"),
+        // bare/suppressed: <Co:N> or <ty>_R, optionally with its `:: type`.
+        seq($._co_token, optional(seq("::", $._type))),
+      ),
+    _co_soup: ($) =>
+      choice(
+        $._co_token,
+        seq("(", repeat($._co_soup), ")"),
+        seq("[", repeat($._co_soup), "]"),
+      ),
+    _co_token: ($) => token(/[^\s()\[\]{}]+/),
 
     _atom: ($) =>
       choice(
@@ -133,8 +183,9 @@ export default grammar({
 
     application: ($) => prec.left(seq($._atom, repeat1($._arg))),
 
-    _arg: ($) => choice($._atom, $.type_arg),
+    _arg: ($) => choice($._atom, $.type_arg, $.coercion_arg),
     type_arg: ($) => seq("@", $._type_atom),
+    coercion_arg: ($) => seq("@~", $.coercion),
 
     lambda: ($) => seq("\\", repeat1($._binder), "->", $._expr),
 
@@ -164,10 +215,18 @@ export default grammar({
     alternative: ($) =>
       seq(field("pattern", $.pattern), "->", field("rhs", $._expr)),
 
-    pattern: ($) => choice($.literal, "__DEFAULT", $.con_pattern),
+    pattern: ($) =>
+      choice($.literal, "__DEFAULT", $.con_pattern, $.tuple_pattern),
 
     con_pattern: ($) =>
       seq(choice($.constructor, $.special_con), repeat($._binder)),
+
+    // Tuple patterns: (a, b), (# a, b #).
+    tuple_pattern: ($) =>
+      choice(
+        seq("(", $._binder, repeat1(seq(",", $._binder)), ")"),
+        seq("(#", sepBy(",", $._binder), "#)"),
+      ),
 
     literal: ($) =>
       choice($._int_lit, $._float_lit, $._char_lit, $._string_lit),
@@ -190,8 +249,10 @@ export default grammar({
           $._type,
         ),
       ),
-    _forall_binder: ($) => choice($.tyvar, $.kinded_tyvar),
+    _forall_binder: ($) => choice($.tyvar, $.kinded_tyvar, $.inferred_tyvar),
     kinded_tyvar: ($) => seq("(", $.tyvar, "::", $._type, ")"),
+    // Inferred-visibility binders: forall {a} {a :: k}. ...
+    inferred_tyvar: ($) => seq("{", $.tyvar, optional(seq("::", $._type)), "}"),
 
     function_type: ($) => prec.right(seq($._type_btype, $._type_op, $._type)),
     _type_op: ($) =>
@@ -212,7 +273,9 @@ export default grammar({
         $.type_paren_form,
         $.unboxed_type,
         $.promoted_type,
+        $.star, // the `*` kind (e.g. forall (t :: * -> *). ..)
       ),
+    star: ($) => "*",
 
     tyvar: ($) => $.variable,
 
@@ -247,12 +310,16 @@ export default grammar({
     // ---- lexical ----
 
     // Optional `Module.Sub.` qualifier, then a lower/underscore/$-led name.
-    variable: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[a-z_$][A-Za-z0-9_'$]*#*/),
+    // `#` may appear within the name (unboxed workers, e.g. c##_a#io).
+    variable: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[a-z_$][A-Za-z0-9_'$#]*/),
     // Qualified upper-led data constructors / worker names (I#, GHC.Types.I#).
-    constructor: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[A-Z][A-Za-z0-9_']*#*/),
+    constructor: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[A-Z][A-Za-z0-9_'#]*/),
     // Symbolic primops used in prefix position (+#, *#, ==#, ># ...).
     operator: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[-+*/<>=!&|^%]+#*/),
-    special_con: ($) => choice("[]", ":"),
+    // Built-in / parenthesised constructors, optionally module-qualified:
+    // [] : (,) (,,) () (##) (#,#) and GHC.Types.[] etc.
+    special_con: ($) =>
+      token(/([A-Z][A-Za-z0-9_']*\.)*(\[\]|:|\(,+\)|\(#+\)|\(#(,+)#\)|\(\))/),
 
     comment: ($) => token(seq("--", /[^\n]*/)),
   },

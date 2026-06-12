@@ -236,3 +236,56 @@ h = h
       (constructor))
     name: (variable)
     rhs: (variable)))
+
+================================
+Cast with coercion
+================================
+
+f = x `cast` (Sym d :: a ~R# b)
+
+--------------------------------
+
+(source_file
+  (binding
+    name: (variable)
+    rhs: (cast
+      (variable)
+      (coercion))))
+
+================================
+Coercion argument
+================================
+
+g = h @~(co :: a ~# b)
+
+--------------------------------
+
+(source_file
+  (binding
+    name: (variable)
+    rhs: (application
+      (variable)
+      (coercion_arg
+        (coercion)))))
+
+================================
+Tuple pattern and source tick
+================================
+
+k = case x of { (a, b) -> src<F:1:2> a }
+
+--------------------------------
+
+(source_file
+  (binding
+    name: (variable)
+    rhs: (case
+      scrutinee: (variable)
+      (alternative
+        pattern: (pattern
+          (tuple_pattern
+            (variable)
+            (variable)))
+        rhs: (tick_expr
+          (tickish)
+          (variable))))))
