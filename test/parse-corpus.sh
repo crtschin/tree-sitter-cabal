@@ -4,7 +4,7 @@
 # stdout. Exits non-zero if any file fails to parse.
 #
 # Usage: parse-corpus.sh <preset>
-#   preset = cabal | cabal-project | ghc-core
+#   preset = cabal | cabal-project | ghc-core | ghc-stg | ghc-cmm
 #
 # Must be invoked from inside the grammar's directory (the one containing
 # tree-sitter.json) so `tree-sitter parse` picks the right parser.
@@ -13,15 +13,19 @@ set -uo pipefail
 
 preset="${1:-}"
 case "$preset" in
-    cabal|cabal-project|ghc-core) ;;
-    *) echo "usage: $0 <preset>  (preset = cabal | cabal-project | ghc-core)" >&2; exit 64 ;;
+    cabal|cabal-project|ghc-core|ghc-stg|ghc-cmm) ;;
+    *) echo "usage: $0 <preset>  (cabal | cabal-project | ghc-core | ghc-stg | ghc-cmm)" >&2; exit 64 ;;
 esac
 
 dir="$(dirname "$0")"
 mapfile -t files < <("$dir/${preset}-files.sh")
 
-# Root of the committed ghc-core fixtures, stripped from TAP labels below.
-gen_root="$(cd "$dir/.." && pwd)/tree-sitter-ghc-core/test/fixtures/dumps"
+# Root of the grammar's committed generated fixtures (ghc-* presets), stripped
+# from TAP labels below so they read as e.g. Bindings.bare.dump-simpl.
+case "$preset" in
+    ghc-*) gen_root="$(cd "$dir/.." && pwd)/tree-sitter-$preset/test/fixtures/dumps" ;;
+    *)     gen_root="" ;;
+esac
 
 n=${#files[@]}
 echo "TAP version 14"
