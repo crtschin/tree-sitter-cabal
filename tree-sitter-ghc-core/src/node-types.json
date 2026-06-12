@@ -74,6 +74,25 @@
     }
   },
   {
+    "type": "annotated_binder",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "binder_annotation",
+          "named": true
+        },
+        {
+          "type": "variable",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "application",
     "named": true,
     "fields": {},
@@ -121,9 +140,24 @@
     }
   },
   {
+    "type": "binder_annotation",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "binding",
     "named": true,
     "fields": {
+      "info": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "idinfo",
+            "named": true
+          }
+        ]
+      },
       "name": {
         "multiple": false,
         "required": true,
@@ -208,6 +242,10 @@
       "required": false,
       "types": [
         {
+          "type": "annotated_binder",
+          "named": true
+        },
+        {
           "type": "type_binder",
           "named": true
         },
@@ -230,6 +268,10 @@
         "multiple": false,
         "required": false,
         "types": [
+          {
+            "type": "annotated_binder",
+            "named": true
+          },
           {
             "type": "variable",
             "named": true
@@ -314,6 +356,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "annotated_binder",
+          "named": true
+        },
         {
           "type": "constructor",
           "named": true
@@ -438,6 +484,11 @@
         }
       ]
     }
+  },
+  {
+    "type": "idinfo",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "jump",
@@ -576,6 +627,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "annotated_binder",
+          "named": true
+        },
         {
           "type": "application",
           "named": true
@@ -1223,6 +1278,10 @@
       "required": true,
       "types": [
         {
+          "type": "binder_annotation",
+          "named": true
+        },
+        {
           "type": "constructor",
           "named": true
         },
@@ -1273,6 +1332,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "binder_annotation",
+          "named": true
+        },
         {
           "type": "constructor",
           "named": true

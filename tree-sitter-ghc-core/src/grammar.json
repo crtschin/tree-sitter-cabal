@@ -55,7 +55,7 @@
       "type": "TOKEN",
       "content": {
         "type": "PATTERN",
-        "value": "Result size of[^{]*\\{[^}]*\\}"
+        "value": "Result size of[^{]*(\\{[^{}]*\\}[^{]*)?\\{[^}]*\\}"
       }
     },
     "rec_block": {
@@ -128,6 +128,22 @@
           ]
         },
         {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "info",
+              "content": {
+                "type": "SYMBOL",
+                "name": "idinfo"
+              }
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
           "type": "FIELD",
           "name": "name",
           "content": {
@@ -164,6 +180,18 @@
           "name": "variable"
         },
         {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "binder_annotation"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
           "type": "STRING",
           "value": "::"
         },
@@ -172,6 +200,30 @@
           "name": "_type"
         }
       ]
+    },
+    "idinfo": {
+      "type": "PREC_DYNAMIC",
+      "value": 1,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "["
+          },
+          {
+            "type": "REPEAT",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_soup"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": "]"
+          }
+        ]
+      }
     },
     "_binder": {
       "type": "CHOICE",
@@ -182,11 +234,28 @@
         },
         {
           "type": "SYMBOL",
+          "name": "annotated_binder"
+        },
+        {
+          "type": "SYMBOL",
           "name": "typed_binder"
         },
         {
           "type": "SYMBOL",
           "name": "type_binder"
+        }
+      ]
+    },
+    "annotated_binder": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "variable"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "binder_annotation"
         }
       ]
     },
@@ -202,6 +271,18 @@
           "name": "variable"
         },
         {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "binder_annotation"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
           "type": "STRING",
           "value": "::"
         },
@@ -214,6 +295,106 @@
           "value": ")"
         }
       ]
+    },
+    "binder_annotation": {
+      "type": "PREC_DYNAMIC",
+      "value": 1,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "["
+          },
+          {
+            "type": "REPEAT",
+            "content": {
+              "type": "SYMBOL",
+              "name": "_soup"
+            }
+          },
+          {
+            "type": "STRING",
+            "value": "]"
+          }
+        ]
+      }
+    },
+    "_soup": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_soup_token"
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "("
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_soup"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": ")"
+            }
+          ]
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "{"
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_soup"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": "}"
+            }
+          ]
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "["
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_soup"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": "]"
+            }
+          ]
+        }
+      ]
+    },
+    "_soup_token": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PATTERN",
+        "value": "[^\\s()\\[\\]{}]+"
+      }
     },
     "type_binder": {
       "type": "CHOICE",
@@ -628,8 +809,17 @@
             "type": "CHOICE",
             "members": [
               {
-                "type": "SYMBOL",
-                "name": "variable"
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "variable"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "annotated_binder"
+                  }
+                ]
               },
               {
                 "type": "BLANK"

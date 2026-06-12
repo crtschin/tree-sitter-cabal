@@ -14,12 +14,15 @@
 // _item_sep token (src/scanner.c), which also bounds a multi-line type signature
 // from the binding line that follows it.
 //
-// Coverage (plan layer A): bindings with optional type signatures, Rec groups,
-// the expression grammar (lambda, application incl. @type args, let/letrec/join/
-// joinrec, jump, case + alternatives, literals, tuples), qualified names, and a
-// type grammar (forall, contexts, arrows incl. multiplicity, application,
-// lists/tuples/kinds/promotion/equality). The [IdInfo] bracket, casts/coercions,
-// ticks and Occ-annotated binders are layers B-D -- see README.md.
+// Coverage (plan layers A-B): bindings with optional type signatures and the
+// [IdInfo] bracket, Rec groups, the expression grammar (lambda, application incl.
+// @type args, let/letrec/join/joinrec, jump, case + alternatives, literals,
+// tuples), qualified names, a type grammar (forall, contexts, arrows incl.
+// multiplicity, application, lists/tuples/kinds/promotion/equality), and
+// occurrence-annotated binders. The [IdInfo] bracket is modelled coarsely as
+// balanced delimiter soup (its Tmpl= template is real Core to recurse into
+// later). Casts/coercions, ticks, and display modes (-dppr-debug, unicode,
+// -dppr-case-as-let) are layers C-D -- see README.md.
 
 const sepBy1 = (sep, rule) => seq(rule, repeat(seq(sep, rule)));
 const sepBy = (sep, rule) => optional(sepBy1(sep, rule));
@@ -48,7 +51,9 @@ export default grammar({
 
     // Result size of Tidy Core
     //   = {terms: 182, types: 90, coercions: 0, joins: 4/8}
-    result_size: ($) => token(/Result size of[^{]*\{[^}]*\}/),
+    // "Result size of Tidy Core = {..}" -- the pass description may itself carry
+    // a `{..}` record (e.g. Float out(FOS {..})), so allow one before the size.
+    result_size: ($) => token(/Result size of[^{]*(\{[^{}]*\}[^{]*)?\{[^}]*\}/),
 
     // Rec bindings are blank-line separated (ITEM_SEP); `Rec {` abuts the first
     // and `end Rec }` abuts the last (single newlines, no ITEM_SEP).
@@ -63,17 +68,41 @@ export default grammar({
     binding: ($) =>
       seq(
         optional(field("signature", $.type_signature)),
+        optional(field("info", $.idinfo)),
         field("name", $.variable),
         repeat($._binder),
         "=",
         field("rhs", $._expr),
       ),
 
-    type_signature: ($) => seq($.variable, "::", $._type),
+    type_signature: ($) =>
+      seq($.variable, optional($.binder_annotation), "::", $._type),
 
-    _binder: ($) => choice($.variable, $.typed_binder, $.type_binder),
+    // The [IdInfo] bracket (GblId, Arity=N, Str=<..>, Cpr=.., Unf=Unf{..Tmpl=e},
+    // RULES: ..). Modelled coarsely as balanced delimiter soup for now; the
+    // Tmpl= template is real Core to be recursed into in a later pass.
+    idinfo: ($) => prec.dynamic(1, seq("[", repeat($._soup), "]")),
 
-    typed_binder: ($) => seq("(", $.variable, "::", $._type, ")"),
+    _binder: ($) =>
+      choice($.variable, $.annotated_binder, $.typed_binder, $.type_binder),
+
+    // A binder carrying an occurrence/demand annotation, e.g. x [Occ=Once1!].
+    annotated_binder: ($) => seq($.variable, $.binder_annotation),
+
+    typed_binder: ($) =>
+      seq("(", $.variable, optional($.binder_annotation), "::", $._type, ")"),
+
+    binder_annotation: ($) => prec.dynamic(1, seq("[", repeat($._soup), "]")),
+
+    // Balanced bracket/brace/paren soup with arbitrary non-delimiter tokens.
+    _soup: ($) =>
+      choice(
+        $._soup_token,
+        seq("(", repeat($._soup), ")"),
+        seq("{", repeat($._soup), "}"),
+        seq("[", repeat($._soup), "]"),
+      ),
+    _soup_token: ($) => token(/[^\s()\[\]{}]+/),
 
     // Lambda-bound type variables: @a, @{a} (inferred), (@ a).
     type_binder: ($) =>
@@ -126,7 +155,7 @@ export default grammar({
         "case",
         field("scrutinee", $._expr),
         "of",
-        field("binder", optional($.variable)),
+        field("binder", optional(choice($.variable, $.annotated_binder))),
         "{",
         sepBy(";", $.alternative),
         "}",

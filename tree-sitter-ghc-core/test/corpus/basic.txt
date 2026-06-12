@@ -181,3 +181,58 @@ p = (x, y)
     rhs: (tuple
       (variable)
       (variable))))
+
+================================
+Binding with IdInfo bracket
+================================
+
+f :: Int
+[GblId, Arity=1, Str=<S>]
+f = x
+
+--------------------------------
+
+(source_file
+  (binding
+    signature: (type_signature
+      (variable)
+      (constructor))
+    info: (idinfo)
+    name: (variable)
+    rhs: (variable)))
+
+================================
+Annotated typed binder
+================================
+
+g = \ (x [Occ=Once1!] :: Int) -> x
+
+--------------------------------
+
+(source_file
+  (binding
+    name: (variable)
+    rhs: (lambda
+      (typed_binder
+        (variable)
+        (binder_annotation)
+        (constructor))
+      (variable))))
+
+================================
+Signature name annotation
+================================
+
+h [Occ=LoopBreaker] :: Int
+h = h
+
+--------------------------------
+
+(source_file
+  (binding
+    signature: (type_signature
+      (variable)
+      (binder_annotation)
+      (constructor))
+    name: (variable)
+    rhs: (variable)))
