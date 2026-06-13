@@ -47,7 +47,7 @@
         "value": 1,
         "content": {
           "type": "PATTERN",
-          "value": "={4,}[^\\n]+={4,}"
+          "value": "={4,}[^\\n]*[^\\n=][^\\n]*={4,}"
         }
       }
     },
@@ -647,26 +647,6 @@
         }
       ]
     },
-    "tick_expr": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "tickish"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "_expr"
-        }
-      ]
-    },
-    "tickish": {
-      "type": "TOKEN",
-      "content": {
-        "type": "PATTERN",
-        "value": "(src|tick|scc)<[^>]*>"
-      }
-    },
     "app": {
       "type": "PREC_LEFT",
       "value": 0,
@@ -966,6 +946,30 @@
       "content": {
         "type": "PATTERN",
         "value": "\"(\\\\.|[^\"\\\\])*\"#*"
+      }
+    },
+    "tick_expr": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "tickish"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_expr"
+        }
+      ]
+    },
+    "tickish": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PREC",
+        "value": 1,
+        "content": {
+          "type": "PATTERN",
+          "value": "(src|scctick|tick|scc|hpc|break)<[^>]*>"
+        }
       }
     },
     "_type": {

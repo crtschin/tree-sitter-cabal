@@ -29,11 +29,12 @@
 // pass dumps (CSE, float, occur-anal, the simplifier iterations). See README.md.
 
 import { sepBy1, sepBy } from "./common/grammar/combinators.mjs";
-import { makeSoupRules } from "./common/grammar/soup.mjs";
+import { makeSoupRules, soupBracket } from "./common/grammar/soup.mjs";
 import {
   banner,
   makeLexicalRules,
   makeLiteralRules,
+  makeTickRules,
   makeTypeRules,
 } from "./common/grammar/haskell.mjs";
 
@@ -166,7 +167,7 @@ export default grammar({
     // The [IdInfo] bracket (GblId, Arity=N, Str=<..>, Cpr=.., Unf=Unf{..Tmpl=e},
     // RULES: ..). Modelled coarsely as balanced delimiter soup for now. The
     // Tmpl= template is real Core to be recursed into in a later pass.
-    idinfo: ($) => prec.dynamic(1, seq("[", repeat($._soup), "]")),
+    idinfo: soupBracket,
 
     _binder: ($) =>
       choice($.variable, $.annotated_binder, $.typed_binder, $.type_binder),
@@ -184,7 +185,7 @@ export default grammar({
         ")",
       ),
 
-    binder_annotation: ($) => prec.dynamic(1, seq("[", repeat($._soup), "]")),
+    binder_annotation: soupBracket,
 
     // Balanced bracket/brace/paren soup (shared with ghc-stg/ghc-cmm).
     ...makeSoupRules(),
@@ -229,11 +230,6 @@ export default grammar({
     // e `cast` co  (compiler/GHC/Core/Ppr.hs ppr_expr Cast).
     cast: ($) => prec.left(seq($._atom, "`cast`", $.coercion)),
 
-    // <tickish> e prefixes an expression with a source note (src<..>) from -g3,
-    // a cost-centre tick, and similar (compiler/GHC/Core/Ppr.hs ppr_expr Tick).
-    tick_expr: ($) => seq($.tickish, $._expr),
-    tickish: ($) => token(/(src|tick|scc)<[^>]*>/),
-
     // A coercion: `(co :: t1 ~role# t2)` unsuppressed, or a bare atom: the
     // suppressed `<Co:N>` (optionally with its `:: type`) or a Refl `<ty>_N`.
     // The body is coarse balanced soup for now (Sym/Sub/Trans/axioms/SelCo/
@@ -242,18 +238,10 @@ export default grammar({
     // (a forall-co prints its binder brace, `forall {a}. ..`).
     coercion: ($) =>
       choice(
-        seq("(", repeat($._co_soup), ")"),
+        seq("(", repeat($._soup), ")"),
         // bare/suppressed: <Co:N> or <ty>_R, optionally with its `:: type`.
-        seq($._co_token, optional(seq($._dcolon, $._type))),
+        seq($._soup_token, optional(seq($._dcolon, $._type))),
       ),
-    _co_soup: ($) =>
-      choice(
-        $._co_token,
-        seq("(", repeat($._co_soup), ")"),
-        seq("[", repeat($._co_soup), "]"),
-        seq("{", repeat($._co_soup), "}"),
-      ),
-    _co_token: ($) => token(/[^\s()\[\]{}]+/),
 
     _atom: ($) =>
       choice(
@@ -270,7 +258,7 @@ export default grammar({
 
     // [gid..] / [lid..] -- an occurrence's IdInfo, printed inline under
     // -dppr-debug. Coarse balanced soup, like the binding [IdInfo].
-    id_annotation: ($) => prec.dynamic(1, seq("[", repeat($._soup), "]")),
+    id_annotation: soupBracket,
 
     // A -dppr-debug case binder carries its annotations, type, and IdInfo inside
     // the parens, `(wild [Occ=Dead] :: t Unf=..)`. Coarse balanced soup.
@@ -340,9 +328,11 @@ export default grammar({
         seq("(#", sepBy(",", $._binder), "#)"),
       ),
 
-    // Literals, the System-FC type grammar, and qualified-name lexical tokens
-    // are shared with ghc-stg (common/grammar/haskell.mjs).
+    // Literals, the tickish prefix, the System-FC type grammar, and
+    // qualified-name lexical tokens are shared with ghc-stg
+    // (common/grammar/haskell.mjs).
     ...makeLiteralRules(),
+    ...makeTickRules(),
     ...makeTypeRules(),
     ...makeLexicalRules(),
 

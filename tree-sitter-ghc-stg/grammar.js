@@ -8,11 +8,12 @@
 // @ts-check
 
 import { sepBy } from "./common/grammar/combinators.mjs";
-import { makeSoupRules } from "./common/grammar/soup.mjs";
+import { makeSoupRules, soupBracket } from "./common/grammar/soup.mjs";
 import {
   banner,
   makeLexicalRules,
   makeLiteralRules,
+  makeTickRules,
   makeTypeRules,
 } from "./common/grammar/haskell.mjs";
 
@@ -100,8 +101,8 @@ export default grammar({
 
     // The [IdInfo] bracket and pre-sig [InlPrag/Occ] note, both coarse balanced
     // soup for now (the same leniency ghc-core takes over IdInfo structure).
-    idinfo: ($) => prec.dynamic(1, seq("[", repeat($._soup), "]")),
-    binder_annotation: ($) => prec.dynamic(1, seq("[", repeat($._soup), "]")),
+    idinfo: soupBracket,
+    binder_annotation: soupBracket,
 
     ...makeSoupRules(),
 
@@ -159,12 +160,6 @@ export default grammar({
         $._stg_atom,
       ),
 
-    // <tickish> e prefixes an expression with a source note (src<..>) from -g3,
-    // a cost-centre tick, and similar (compiler/GHC/Stg/Syntax.hs StgTick). Same
-    // surface as ghc-core's tick_expr.
-    tick_expr: ($) => seq($.tickish, $._expr),
-    tickish: ($) => token(/(src|tick|scc)<[^>]*>/),
-
     // StgApp: f a b is a function variable applied to space-separated atoms.
     app: ($) => prec.left(seq($.variable, repeat1($._stg_arg))),
 
@@ -216,9 +211,11 @@ export default grammar({
     _stg_atom: ($) =>
       choice($.variable, $.literal, $.constructor, $.special_con),
 
-    // Literals, the System-FC type grammar, and qualified-name lexical tokens
-    // are shared with ghc-core (common/grammar/haskell.mjs).
+    // Literals, the tickish prefix, the System-FC type grammar, and
+    // qualified-name lexical tokens are shared with ghc-core
+    // (common/grammar/haskell.mjs).
     ...makeLiteralRules(),
+    ...makeTickRules(),
     ...makeTypeRules(),
     ...makeLexicalRules(),
 

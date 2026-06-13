@@ -11,10 +11,10 @@
 import { sepBy } from "./combinators.mjs";
 
 // The phase banner ==================== <phase> ====================, printed
-// around every GHC dump. The middle is required (>=1 char) so an all-`=` body
-// line is not a banner. Used by all four grammars (members and the ghc-dump
-// container).
-export const banner = ($) => token(prec(1, /={4,}[^\n]+={4,}/));
+// around every GHC dump. The middle must hold a non-`=` char (the space-padded
+// title), so an all-`=` line (e.g. a `=========` divider in a dump body) is not
+// a banner. Used by all four grammars (members and the ghc-dump container).
+export const banner = ($) => token(prec(1, /={4,}[^\n]*[^\n=][^\n]*={4,}/));
 
 // Integer / float / char / string literals (Core and STG print these the same).
 export function makeLiteralRules() {
@@ -26,6 +26,22 @@ export function makeLiteralRules() {
     _float_lit: ($) => token(/-?[0-9]+\.[0-9]+#*/),
     _char_lit: ($) => token(/'(\\.|[^'\\])'#*/),
     _string_lit: ($) => token(/"(\\.|[^"\\])*"#*/),
+  };
+}
+
+// The tickish prefix on a ticked expression, `<tickish> e`. GHC prints six
+// forms (compiler/GHC/Core/Ppr.hs, `instance Outputable GenTickish`):
+//   src<span> scc<cc> tick<cc> scctick<cc> hpc<mod,ix> break<mod,ix>(vars)
+// Core and STG share this (StgTick reuses the same printer), so a grammar's
+// `_expr` lists $.tick_expr and spreads makeTickRules(). token(prec(1)) makes a
+// keyword-led `<..>` win the equal-length lex tie against $.variable, whose
+// operator-suffix class (kept for $c<$ / $c>>= selectors) would otherwise munch
+// the `<..>` into the name. `break<..>`'s trailing (vars) parses as a following
+// atom; the token covers only the angle part.
+export function makeTickRules() {
+  return {
+    tick_expr: ($) => seq($.tickish, $._expr),
+    tickish: ($) => token(prec(1, /(src|scctick|tick|scc|hpc|break)<[^>]*>/)),
   };
 }
 

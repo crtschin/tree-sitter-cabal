@@ -324,7 +324,7 @@
         "value": 1,
         "content": {
           "type": "PATTERN",
-          "value": "={4,}[^\\n]+={4,}"
+          "value": "={4,}[^\\n]*[^\\n=][^\\n]*={4,}"
         }
       }
     },
@@ -903,26 +903,6 @@
         ]
       }
     },
-    "tick_expr": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "tickish"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "_expr"
-        }
-      ]
-    },
-    "tickish": {
-      "type": "TOKEN",
-      "content": {
-        "type": "PATTERN",
-        "value": "(src|tick|scc)<[^>]*>"
-      }
-    },
     "coercion": {
       "type": "CHOICE",
       "members": [
@@ -937,7 +917,7 @@
               "type": "REPEAT",
               "content": {
                 "type": "SYMBOL",
-                "name": "_co_soup"
+                "name": "_soup"
               }
             },
             {
@@ -951,7 +931,7 @@
           "members": [
             {
               "type": "SYMBOL",
-              "name": "_co_token"
+              "name": "_soup_token"
             },
             {
               "type": "CHOICE",
@@ -977,82 +957,6 @@
           ]
         }
       ]
-    },
-    "_co_soup": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "SYMBOL",
-          "name": "_co_token"
-        },
-        {
-          "type": "SEQ",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "("
-            },
-            {
-              "type": "REPEAT",
-              "content": {
-                "type": "SYMBOL",
-                "name": "_co_soup"
-              }
-            },
-            {
-              "type": "STRING",
-              "value": ")"
-            }
-          ]
-        },
-        {
-          "type": "SEQ",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "["
-            },
-            {
-              "type": "REPEAT",
-              "content": {
-                "type": "SYMBOL",
-                "name": "_co_soup"
-              }
-            },
-            {
-              "type": "STRING",
-              "value": "]"
-            }
-          ]
-        },
-        {
-          "type": "SEQ",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "{"
-            },
-            {
-              "type": "REPEAT",
-              "content": {
-                "type": "SYMBOL",
-                "name": "_co_soup"
-              }
-            },
-            {
-              "type": "STRING",
-              "value": "}"
-            }
-          ]
-        }
-      ]
-    },
-    "_co_token": {
-      "type": "TOKEN",
-      "content": {
-        "type": "PATTERN",
-        "value": "[^\\s()\\[\\]{}]+"
-      }
     },
     "_atom": {
       "type": "CHOICE",
@@ -1783,6 +1687,30 @@
       "content": {
         "type": "PATTERN",
         "value": "\"(\\\\.|[^\"\\\\])*\"#*"
+      }
+    },
+    "tick_expr": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "tickish"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_expr"
+        }
+      ]
+    },
+    "tickish": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PREC",
+        "value": 1,
+        "content": {
+          "type": "PATTERN",
+          "value": "(src|scctick|tick|scc|hpc|break)<[^>]*>"
+        }
       }
     },
     "_type": {

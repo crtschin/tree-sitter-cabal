@@ -115,47 +115,48 @@ static bool ts_lex(TSLexer *lexer, TSStateId state) {
     case 0:
       if (eof) ADVANCE(10);
       if (lookahead == '\n') SKIP(0);
-      if (lookahead == '=') ADVANCE(18);
+      if (lookahead == '=') ADVANCE(20);
       if (('\t' <= lookahead && lookahead <= '\r') ||
           lookahead == ' ') ADVANCE(13);
-      if (lookahead != 0) ADVANCE(21);
+      if (lookahead != 0) ADVANCE(22);
       END_STATE();
     case 1:
-      if (lookahead == '=') ADVANCE(8);
+      if (lookahead == '=') ADVANCE(2);
       END_STATE();
     case 2:
-      if (lookahead == '=') ADVANCE(12);
-      if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(7);
-      END_STATE();
-    case 3:
-      if (lookahead == '=') ADVANCE(1);
-      END_STATE();
-    case 4:
       if (lookahead == '=') ADVANCE(2);
       if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(7);
+          lookahead != '\n') ADVANCE(8);
+      END_STATE();
+    case 3:
+      if (lookahead == '=') ADVANCE(12);
+      if (lookahead != 0 &&
+          lookahead != '\n') ADVANCE(8);
+      END_STATE();
+    case 4:
+      if (lookahead == '=') ADVANCE(1);
       END_STATE();
     case 5:
       if (lookahead == '=') ADVANCE(3);
+      if (lookahead != 0 &&
+          lookahead != '\n') ADVANCE(8);
       END_STATE();
     case 6:
       if (lookahead == '=') ADVANCE(4);
-      if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(7);
       END_STATE();
     case 7:
-      if (lookahead == '=') ADVANCE(6);
+      if (lookahead == '=') ADVANCE(5);
       if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(7);
+          lookahead != '\n') ADVANCE(8);
       END_STATE();
     case 8:
+      if (lookahead == '=') ADVANCE(7);
       if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(7);
+          lookahead != '\n') ADVANCE(8);
       END_STATE();
     case 9:
       if (eof) ADVANCE(10);
-      if (lookahead == '=') ADVANCE(5);
+      if (lookahead == '=') ADVANCE(6);
       if (('\t' <= lookahead && lookahead <= '\r') ||
           lookahead == ' ') SKIP(9);
       END_STATE();
@@ -166,38 +167,38 @@ static bool ts_lex(TSLexer *lexer, TSStateId state) {
       ACCEPT_TOKEN(sym_banner);
       if (lookahead == '=') ADVANCE(11);
       if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(20);
+          lookahead != '\n') ADVANCE(21);
       END_STATE();
     case 12:
       ACCEPT_TOKEN(sym_banner);
       if (lookahead == '=') ADVANCE(12);
       if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(7);
+          lookahead != '\n') ADVANCE(8);
       END_STATE();
     case 13:
       ACCEPT_TOKEN(sym__line);
-      if (lookahead == '=') ADVANCE(18);
+      if (lookahead == '=') ADVANCE(20);
       if (lookahead == '\t' ||
           (0x0b <= lookahead && lookahead <= '\r') ||
           lookahead == ' ') ADVANCE(13);
       if (lookahead != 0 &&
-          (lookahead < '\t' || '\r' < lookahead)) ADVANCE(21);
+          (lookahead < '\t' || '\r' < lookahead)) ADVANCE(22);
       END_STATE();
     case 14:
       ACCEPT_TOKEN(sym__line);
       if (lookahead == '=') ADVANCE(11);
       if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(20);
+          lookahead != '\n') ADVANCE(21);
       END_STATE();
     case 15:
       ACCEPT_TOKEN(sym__line);
       if (lookahead == '=') ADVANCE(16);
       if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(21);
+          lookahead != '\n') ADVANCE(22);
       END_STATE();
     case 16:
       ACCEPT_TOKEN(sym__line);
-      if (lookahead == '=') ADVANCE(22);
+      if (lookahead == '=') ADVANCE(16);
       if (lookahead != 0 &&
           lookahead != '\n') ADVANCE(21);
       END_STATE();
@@ -205,35 +206,36 @@ static bool ts_lex(TSLexer *lexer, TSStateId state) {
       ACCEPT_TOKEN(sym__line);
       if (lookahead == '=') ADVANCE(14);
       if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(20);
+          lookahead != '\n') ADVANCE(21);
       END_STATE();
     case 18:
       ACCEPT_TOKEN(sym__line);
       if (lookahead == '=') ADVANCE(15);
       if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(21);
+          lookahead != '\n') ADVANCE(22);
       END_STATE();
     case 19:
       ACCEPT_TOKEN(sym__line);
       if (lookahead == '=') ADVANCE(17);
       if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(20);
+          lookahead != '\n') ADVANCE(21);
       END_STATE();
     case 20:
       ACCEPT_TOKEN(sym__line);
-      if (lookahead == '=') ADVANCE(19);
+      if (lookahead == '=') ADVANCE(18);
       if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(20);
+          lookahead != '\n') ADVANCE(22);
       END_STATE();
     case 21:
       ACCEPT_TOKEN(sym__line);
+      if (lookahead == '=') ADVANCE(19);
       if (lookahead != 0 &&
           lookahead != '\n') ADVANCE(21);
       END_STATE();
     case 22:
       ACCEPT_TOKEN(sym__line);
       if (lookahead != 0 &&
-          lookahead != '\n') ADVANCE(20);
+          lookahead != '\n') ADVANCE(22);
       END_STATE();
     default:
       return false;
