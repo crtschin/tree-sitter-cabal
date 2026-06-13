@@ -18,9 +18,31 @@ set -uo pipefail
 repo="$(cd "$(dirname "$0")/.." && pwd)"
 inj="$repo/tree-sitter-ghc-dump/queries/injections.scm"
 
-# (banner-regex, member-language) pairs, in injections.scm order.
-mapfile -t regexes < <(grep -oP '#match\? @_banner "\K[^"]+' "$inj")
-mapfile -t langs < <(grep -oP 'injection\.language "\K[^"]+' "$inj")
+# (banner-regex, member-language) dispatch table, read straight out of
+# injections.scm so it stays in lockstep. Paired per rule: a rule's `#match?`
+# regex is bound to the `injection.language` that follows it, so the two arrays
+# can never desync. Hard-fail if nothing parses out (a reformatted/restructured
+# query must break loudly, not validate zero sections and pass).
+regexes=()
+langs=()
+rx=""
+while IFS= read -r line; do
+    if [[ "$line" == *'#match? @_banner "'* ]]; then
+        rx="${line#*#match? @_banner \"}"
+        rx="${rx%%\"*}"
+    fi
+    if [[ "$line" == *'injection.language "'* && -n "$rx" ]]; then
+        lang="${line#*injection.language \"}"
+        lang="${lang%%\"*}"
+        regexes+=("$rx")
+        langs+=("$lang")
+        rx=""
+    fi
+done <"$inj"
+if [[ ${#regexes[@]} -eq 0 ]]; then
+    echo "BUG: no (banner-regex -> language) rules read from $inj -- the injection dispatch table is unreadable; refusing to pass." >&2
+    exit 1
+fi
 
 classify() { # classify <banner> -> echoes the member language, or nothing
     local banner="$1" i
@@ -44,7 +66,14 @@ declare -A bucket=()    # lang -> newline-separated body files
 declare -A banner_of=() # body file -> its banner
 n=0
 for f in "${files[@]}"; do
-    fid="$(basename "$(dirname "$f")")_$(basename "$f" .stderr)"
+    # fid is the file's path under testsuite/tests/ with slashes -> underscores,
+    # so it is unique across the suite (many dirs share basename `should_compile`,
+    # which a basename-only id would collide -- clobbering section temp files and
+    # cross-suppressing known gaps).
+    rel="${f#"$GHC_SRC"/}"
+    rel="${rel#testsuite/tests/}"
+    fid="${rel%.stderr}"
+    fid="${fid//\//_}"
     # awk prints "banner<TAB>bodyfile" per section and writes each body to a file.
     while IFS=$'\t' read -r banner body; do
         lang="$(classify "$banner")"
@@ -53,7 +82,7 @@ for f in "${files[@]}"; do
         banner_of[$body]="$banner"
         n=$((n + 1))
     done < <(awk -v dir="$tmp" -v fid="$fid" '
-        /^={4,}.*={4,}[[:space:]]*$/ {
+        /^={4,}.+={4,}[[:space:]]*$/ {
             idx++; out = dir "/" fid "_" idx
             b = $0
             sub(/^={4,}[[:space:]]*/, "", b); sub(/[[:space:]]*={4,}.*$/, "", b)
@@ -70,10 +99,10 @@ done
 # is a variant/appendix dump outside the member's modelled surface; an editor
 # leaves it un-highlighted. <fileid>_<section-index> -> reason.
 declare -A known_gaps=(
-    [should_compile_T23083_1]="CorePrep is a second Core pass; ghc-core models Tidy Core"
-    [should_compile_prof-late-cc3_2]="CorePrep is a second Core pass; ghc-core models Tidy Core"
-    [should_compile_T13588_2]="pre-unarise STG omits the binding-terminating ; that ghc-stg requires"
-    [should_compile_T26615_1]="1900-line two-pass dump; trailing imported-rules dash-section"
+    [simplCore_should_compile_T23083_1]="CorePrep is a second Core pass; ghc-core models Tidy Core"
+    [profiling_should_compile_prof-late-cc3_2]="CorePrep is a second Core pass; ghc-core models Tidy Core"
+    [simplStg_should_compile_T13588_2]="pre-unarise STG omits the binding-terminating ; that ghc-stg requires"
+    [simplCore_should_compile_T26615_1]="1900-line two-pass dump; trailing imported-rules dash-section"
 )
 
 mapfile -t uniq_langs < <(printf '%s\n' "${langs[@]}" | sort -u)

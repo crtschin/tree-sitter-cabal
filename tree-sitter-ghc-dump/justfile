@@ -1,3 +1,7 @@
+# Run recipe lines under bash with pipefail so a gate script's non-zero exit
+# propagates through `| tapview` (the script, not tapview, decides pass/fail).
+set shell := ["bash", "-o", "pipefail", "-c"]
+
 default: test
 
 # Run the inline unit tests, parse the dump-stream corpus, and validate that
