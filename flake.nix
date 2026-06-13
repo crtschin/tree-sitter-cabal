@@ -106,7 +106,8 @@
         # develop` and `nix flake check` runs them. Entries shell out to the
         # justfile, the single source of truth shared with CI (see
         # .github/workflows/test.yml). fmt + static checks are cheap, so they
-        # gate every commit. The slow grammar build + corpus parse gates pushes.
+        # gate every commit. just test (the slow grammar build + corpus parse)
+        # is disabled as a push gate and left to CI and manual runs.
         # Hooks assume the devShell is active (direnv `use flake`), so
         # tree-sitter/nixfmt/prettier and `nix` are on PATH for the recipes.
         pre-commit-check = git-hooks.lib.${system}.run {
@@ -133,7 +134,7 @@
                 stages = [ "pre-commit" ];
               };
               just-test = {
-                enable = true;
+                enable = false;
                 name = "just test";
                 entry = "${just} test";
                 language = "system";
