@@ -14,6 +14,8 @@
 
 set -uo pipefail
 
+source "$(dirname "$0")/parse-lib.sh"
+
 lang="${1:?usage: $0 <ghc-core|ghc-stg|ghc-cmm|ghc-dump>}"
 case "$lang" in
     ghc-core | ghc-stg | ghc-cmm | ghc-dump) ;;
@@ -153,17 +155,13 @@ if [[ ! -e "$parser_dir" ]]; then
     exit 1
 fi
 
-# Single-pass batch parse. Capture each file's failure detail line (same parse
-# output shape parse-corpus.sh consumes).
-parse_out="$(tree-sitter parse --quiet --lib-path "$parser_dir" --lang-name "$ts_lang" "${files[@]}" 2>&1)"
+# Single-pass batch parse via the shared helper. A parser that fails to load is
+# a Bail out, not a silent all-ok pass.
 declare -A error_for=()
-while IFS= read -r line; do
-    [[ "$line" == *$'\t'Parse:* ]] || continue
-    path="${line%%$'\t'*}"
-    path="${path%"${path##*[![:space:]]}"}" # strip tree-sitter's column padding
-    [[ "$line" == *'(ERROR'* || "$line" == *'(MISSING'* ]] &&
-        error_for["$path"]="${line##*$'\t'}"
-done <<<"$parse_out"
+if ! collect_parse_errors error_for --lib-path "$parser_dir" --lang-name "$ts_lang" "${files[@]}"; then
+    echo "Bail out! parser at $parser_dir failed to load"
+    exit 1
+fi
 
 # Known long-tail gaps (<format-cell>/<Module>.dump-<pass> labels): cells whose
 # generated dump is outside the grammar's modelled scope. That covers a

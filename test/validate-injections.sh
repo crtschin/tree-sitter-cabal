@@ -13,6 +13,8 @@
 
 set -uo pipefail
 
+source "$(dirname "$0")/parse-lib.sh"
+
 : "${GHC_SRC:?GHC_SRC is unset (enter the dev shell)}"
 
 repo="$(cd "$(dirname "$0")/.." && pwd)"
@@ -100,7 +102,6 @@ done
 # leaves it un-highlighted. <fileid>_<section-index> -> reason.
 declare -A known_gaps=(
     [simplCore_should_compile_T23083_1]="CorePrep is a second Core pass; ghc-core models Tidy Core"
-    [profiling_should_compile_prof-late-cc3_2]="CorePrep is a second Core pass; ghc-core models Tidy Core"
     [simplStg_should_compile_T13588_2]="pre-unarise STG omits the binding-terminating ; that ghc-stg requires"
     [simplCore_should_compile_T26615_1]="1900-line two-pass dump; trailing imported-rules dash-section"
 )
@@ -119,13 +120,18 @@ for lang in "${uniq_langs[@]}"; do
         echo "ok $i - $lang (0 sections)"
         continue
     fi
-    out="$(tree-sitter parse --quiet --lib-path "$parser" --lang-name "$lang" "${list[@]}" 2>&1)"
+    # Parse the bucket via the shared helper; a parser that fails to load fails
+    # this lang's test instead of silently passing with zero detected errors.
+    declare -A sec_err=()
+    if ! collect_parse_errors sec_err --lib-path "$parser" --lang-name "$lang" "${list[@]}"; then
+        echo "not ok $i - $lang (parser at $parser failed to load)"
+        rc=1
+        continue
+    fi
     # Partition failing sections into known gaps and unexpected regressions.
     unexpected=()
     known=0
-    while IFS= read -r ln; do
-        [[ -z "$ln" ]] && continue
-        bf="${ln%%[[:space:]]*}" # tree-sitter right-pads the path
+    for bf in "${!sec_err[@]}"; do
         sec="${bf##*/}"
         if [[ -n "${known_gaps[$sec]:-}" ]]; then
             known=$((known + 1))
@@ -133,7 +139,7 @@ for lang in "${uniq_langs[@]}"; do
         else
             unexpected+=("[${banner_of[$bf]:-?}] $sec")
         fi
-    done < <(grep -E '\(ERROR|\(MISSING' <<<"$out")
+    done
     if [[ ${#unexpected[@]} -eq 0 ]]; then
         echo "ok $i - $lang (${#list[@]} sections; $known known gaps)"
     else

@@ -18,6 +18,7 @@ case "$preset" in
 esac
 
 dir="$(dirname "$0")"
+source "$dir/parse-lib.sh"
 mapfile -t files < <("$dir/${preset}-files.sh")
 
 n=${#files[@]}
@@ -28,24 +29,13 @@ if [[ $n -eq 0 ]]; then
     exit 1
 fi
 
-# Single-pass batch parse. Capture any per-file failure lines.
-parse_output=$(tree-sitter parse --quiet "${files[@]}" 2>&1) || true
-
+# Single-pass batch parse via the shared helper (cwd auto-detects the parser).
+# A parser that fails to load is a Bail out, not a silent all-ok pass.
 declare -A error_for=()
-while IFS= read -r line; do
-    # Failure lines look like:
-    #   <path><pad><tab>Parse: <ms><tab><bytes>/ms<tab>(ERROR [r1, c1] - [r2, c2])
-    # where <pad> is spaces tree-sitter inserts to align columns. Strip
-    # those trailing spaces so the key matches the clean absolute path
-    # used in the lookup below.
-    [[ -z "$line" ]] && continue
-    if [[ "$line" == *$'\t'Parse:* ]]; then
-        path="${line%%$'\t'*}"
-        path="${path%"${path##*[![:space:]]}"}"
-        detail="${line##*$'\t'}"
-        error_for["$path"]="$detail"
-    fi
-done <<< "$parse_output"
+if ! collect_parse_errors error_for "${files[@]}"; then
+    echo "Bail out! tree-sitter could not parse preset $preset (build the grammar first?)"
+    exit 1
+fi
 
 # Strip a known corpus root prefix for human-readable TAP labels.
 label_for() {
