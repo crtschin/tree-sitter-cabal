@@ -1,6 +1,12 @@
+lang := "ghc_dump"
+slug := "ghc-dump"
+
 # Run recipe lines under bash with pipefail so a gate script's non-zero exit
 # propagates through `| tapview` (the script, not tapview, decides pass/fail).
 set shell := ["bash", "-o", "pipefail", "-c"]
+
+# Shared build/check/fmt/clean/generate/parse/highlight recipes.
+import 'common/recipes.just'
 
 default: test
 
@@ -8,12 +14,12 @@ default: test
 # injections.scm dispatches every section body to a member grammar that parses
 # it (a clean gate modulo documented known gaps).
 test: build parse-corpus validate-injections
-    tree-sitter test --lib-path result/parser --lang-name ghc_dump
+    tree-sitter test --lib-path result/parser --lang-name {{ lang }}
 
 # Parse every harvested GHC dump stream in $GHC_SRC (any IL banner). This only
 # checks the banner/body split; `validate-injections` checks the dispatch.
 parse-corpus:
-    ../test/parse-corpus.sh ghc-dump | tapview
+    ../test/parse-corpus.sh {{ slug }} | tapview
 
 # End-to-end injection check: split each harvested dump stream into its
 # banner-delimited sections, classify each with injections.scm's own dispatch
@@ -29,32 +35,4 @@ validate-injections:
 # temp dir, parse it, report errors, tear down (nothing committed; see
 # test/gen-corpus.sh).
 gen-corpus: build
-    ../test/gen-corpus.sh ghc-dump
-
-# Build the grammar via the nix flake (buildGrammar runs generate internally).
-build:
-    nix build ..#tree-sitter-ghc-dump
-
-# Check grammar for errors without building a result symlink.
-check:
-    nix build ..#tree-sitter-ghc-dump --no-link
-
-# Format the grammar file (mode: write|check)
-fmt mode="write":
-    prettier --{{ mode }} grammar.js
-
-# Clean build artifacts
-clean:
-    rm -rf ghc_dump.so result
-
-# Generate src/parser.c locally (needed by highlight).
-generate:
-    tree-sitter generate
-
-# Parse a file and print AST
-parse file: build
-    tree-sitter parse --lib-path result/parser --lang-name ghc_dump {{ file }}
-
-# Show syntax highlighting (resolves injections.scm against the member grammars).
-highlight file: generate
-    tree-sitter highlight {{ file }}
+    ../test/gen-corpus.sh {{ slug }}

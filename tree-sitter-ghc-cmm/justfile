@@ -1,43 +1,21 @@
+lang := "ghc_cmm"
+slug := "ghc-cmm"
+
+# Shared build/check/fmt/clean/generate/parse/highlight recipes.
+import 'common/recipes.just'
+
 default: test
 
 # Run the inline unit tests and parse the Cmm-dump corpus for this grammar.
 test: build parse-corpus
-    tree-sitter test --lib-path result/parser --lang-name ghc_cmm
+    tree-sitter test --lib-path result/parser --lang-name {{ lang }}
 
 # Parse every harvested Cmm dump (`Output Cmm` / `Cmm produced by codegen`
 # banner) in $GHC_SRC -- a clean gate (0 ERROR/MISSING), also run by `test`.
 parse-corpus:
-    ../test/parse-corpus.sh ghc-cmm | tapview
+    ../test/parse-corpus.sh {{ slug }} | tapview
 
 # Ephemeral coverage check: generate Cmm dumps with GHC into a temp dir, parse
 # them, report errors, tear down (nothing committed; see test/gen-corpus.sh).
 gen-corpus: build
-    ../test/gen-corpus.sh ghc-cmm
-
-# Build the grammar via the nix flake (buildGrammar runs generate internally).
-build:
-    nix build ..#tree-sitter-ghc-cmm
-
-# Check grammar for errors without building a result symlink.
-check:
-    nix build ..#tree-sitter-ghc-cmm --no-link
-
-# Format the grammar file (mode: write|check)
-fmt mode="write":
-    prettier --{{ mode }} grammar.js
-
-# Clean build artifacts
-clean:
-    rm -rf ghc_cmm.so result
-
-# Generate src/parser.c locally (needed by highlight).
-generate:
-    tree-sitter generate
-
-# Parse a file and print AST
-parse file: build
-    tree-sitter parse --lib-path result/parser --lang-name ghc_cmm {{ file }}
-
-# Show syntax highlighting for a file
-highlight file: generate
-    tree-sitter highlight {{ file }}
+    ../test/gen-corpus.sh {{ slug }}
