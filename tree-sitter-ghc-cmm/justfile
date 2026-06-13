@@ -7,7 +7,7 @@ import 'common/recipes.just'
 default: test
 
 # Run the inline unit tests and parse the Cmm-dump corpus for this grammar.
-test: build check-queries parse-corpus
+test: build check-queries parse-corpus gen-corpus
     tree-sitter test --lib-path result/parser --lang-name {{ lang }}
 
 # Parse every harvested Cmm dump (`Output Cmm` / `Cmm produced by codegen`
@@ -18,4 +18,4 @@ parse-corpus:
 # Ephemeral coverage check: generate Cmm dumps with GHC into a temp dir, parse
 # them, report errors, tear down (nothing committed; see test/gen-corpus.sh).
 gen-corpus: build
-    ../test/gen-corpus.sh {{ slug }}
+    ../test/gen-corpus.sh {{ slug }} | tapview

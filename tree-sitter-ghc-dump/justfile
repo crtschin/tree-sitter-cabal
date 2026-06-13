@@ -13,7 +13,7 @@ default: test
 # Run the inline unit tests, parse the dump-stream corpus, and validate that
 # injections.scm dispatches every section body to a member grammar that parses
 # it (a clean gate modulo documented known gaps).
-test: build check-queries parse-corpus validate-injections
+test: build check-queries parse-corpus validate-injections gen-corpus
     tree-sitter test --lib-path result/parser --lang-name {{ lang }}
 
 # Parse every harvested GHC dump stream in $GHC_SRC (any IL banner). This only
@@ -35,4 +35,4 @@ validate-injections:
 # temp dir, parse it, report errors, tear down (nothing committed; see
 # test/gen-corpus.sh).
 gen-corpus: build
-    ../test/gen-corpus.sh {{ slug }}
+    ../test/gen-corpus.sh {{ slug }} | tapview

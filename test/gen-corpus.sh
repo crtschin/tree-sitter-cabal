@@ -105,24 +105,75 @@ find "$tmp" -type f \( -name '*.dump-*' -o -name '*.dump' \) \
 
 mapfile -t files < <(find "$tmp" -type f \( -name '*.dump-*' -o -name '*.dump' \) | LC_ALL=C sort)
 n=${#files[@]}
+echo "TAP version 14"
+echo "1..$n"
 if [[ $n -eq 0 ]]; then
-    echo "no dumps generated for $lang (did the fixtures compile?)" >&2
+    echo "Bail out! no dumps generated for $lang (did the fixtures compile?)"
     exit 1
 fi
 if [[ ! -e "$parser_dir" ]]; then
-    echo "no parser at $parser_dir -- run \`just build\` first" >&2
+    echo "Bail out! no parser at $parser_dir -- run \`just $lang::build\` first"
     exit 1
 fi
 
-# Batch-parse; tree-sitter prints a line per file and exits non-zero on any error.
+# Single-pass batch parse; capture each file's failure detail line (same parse
+# output shape parse-corpus.sh consumes).
 parse_out="$(tree-sitter parse --quiet --lib-path "$parser_dir" --lang-name "$ts_lang" "${files[@]}" 2>&1)"
-fails=0
+declare -A error_for=()
 while IFS= read -r line; do
-    [[ "$line" == *'(ERROR'* || "$line" == *'(MISSING'* ]] && {
-        fails=$((fails + 1))
-        echo "FAIL ${line%%$'\t'*}"
-    }
+    [[ "$line" == *$'\t'Parse:* ]] || continue
+    path="${line%%$'\t'*}"
+    path="${path%"${path##*[![:space:]]}"}" # strip tree-sitter's column padding
+    [[ "$line" == *'(ERROR'* || "$line" == *'(MISSING'* ]] &&
+        error_for["$path"]="${line##*$'\t'}"
 done <<<"$parse_out"
 
-echo "# $lang: $((n - fails))/$n dumps parsed cleanly; $fails with errors (ephemeral, $tmp removed)"
-[[ $fails -eq 0 ]]
+# Known long-tail gaps (<format-cell>/<Module>.dump-<pass> labels): cells whose
+# generated dump is outside the grammar's modelled scope -- a non-Tidy-Core pass
+# (CorePrep, a Float-out pass header, a multi-iteration dump) or an exotic
+# -dppr/-fprint display format. Emitted as TAP `# TODO` so they stay visible
+# without failing the gate; a NEW failure outside this set still fails. Only
+# ghc-core has any (the single-pass IL grammars cover their matrices cleanly).
+declare -A xfail=()
+if [[ "$lang" == ghc-core ]]; then
+    for c in \
+        passes/Bindings.dump-cse passes/Bindings.dump-float-in \
+        passes/Bindings.dump-float-out passes/Bindings.dump-late-cc \
+        passes/Bindings.dump-occur-anal passes/Bindings.dump-simpl-iterations \
+        passes/Coerce.dump-cse passes/Coerce.dump-float-in \
+        passes/Coerce.dump-float-out passes/Coerce.dump-late-cc \
+        passes/Coerce.dump-occur-anal passes/Coerce.dump-prep \
+        passes/Coerce.dump-simpl-iterations passes/Ticks.dump-cse \
+        passes/Ticks.dump-float-in passes/Ticks.dump-float-out \
+        passes/Ticks.dump-late-cc passes/Ticks.dump-occur-anal \
+        passes/Ticks.dump-simpl-iterations \
+        ppr-debug/Bindings.dump-simpl ppr-debug/Coerce.dump-simpl \
+        ppr-debug/Ticks.dump-simpl unicode/Bindings.dump-simpl \
+        unicode/Coerce.dump-simpl unicode/Ticks.dump-simpl \
+        case-as-let/Bindings.dump-simpl case-as-let/Coerce.dump-simpl \
+        case-as-let/Ticks.dump-simpl; do
+        xfail["$c"]="out-of-scope Core pass / exotic display format (ghc-core targets single-pass Tidy Core)"
+    done
+fi
+
+exit_code=0
+i=0
+for f in "${files[@]}"; do
+    i=$((i + 1))
+    label="${f#"$tmp"/}"
+    label="${label/test\/fixtures\//}" # drop the source-path noise GHC mirrors
+    reason="${xfail[$label]:-}"
+    todo=""
+    [[ -n "$reason" ]] && todo=" # TODO $reason"
+    if [[ -n "${error_for[$f]:-}" ]]; then
+        echo "not ok $i - $label$todo"
+        echo "  ---"
+        echo "  error: ${error_for[$f]}"
+        echo "  ..."
+        # Only an unexpected (non-xfail) failure fails the gate.
+        [[ -z "$reason" ]] && exit_code=1
+    else
+        echo "ok $i - $label$todo"
+    fi
+done
+exit "$exit_code"
