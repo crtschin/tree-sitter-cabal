@@ -50,7 +50,7 @@ export default grammar({
     source_file: ($) => repeat(choice($.banner, $.cmm_group)),
 
     // ==================== Output Cmm ====================
-    banner: ($) => token(prec(1, /={4,}[^\n]*={4,}/)),
+    banner: ($) => token(prec(1, /={4,}[^\n]+={4,}/)),
 
     // [ decl, decl, .. ] -- a CmmGroup of procs and data sections.
     cmm_group: ($) => seq("[", sepBy(",", $._decl), "]"),

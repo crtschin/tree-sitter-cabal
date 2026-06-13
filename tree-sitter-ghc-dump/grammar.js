@@ -30,7 +30,7 @@ export default grammar({
 
     // ==================== Tidy Core ====================
     // Wins over `_line` on a banner line via token precedence (equal length).
-    banner: ($) => token(prec(1, /={4,}[^\n]*={4,}/)),
+    banner: ($) => token(prec(1, /={4,}[^\n]+={4,}/)),
 
     // Everything up to the next banner, as a single node so injections.scm can
     // hand the whole range to a member grammar.

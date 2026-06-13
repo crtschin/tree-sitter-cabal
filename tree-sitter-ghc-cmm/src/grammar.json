@@ -26,7 +26,7 @@
         "value": 1,
         "content": {
           "type": "PATTERN",
-          "value": "={4,}[^\\n]*={4,}"
+          "value": "={4,}[^\\n]+={4,}"
         }
       }
     },

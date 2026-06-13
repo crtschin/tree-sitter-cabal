@@ -91,7 +91,7 @@ export default grammar({
     dash_header: ($) => token(prec(2, /-{4,}[^\n]*-{4,}/)),
 
     // ==================== Tidy Core ====================
-    banner: ($) => token(prec(1, /={4,}[^\n]*={4,}/)),
+    banner: ($) => token(prec(1, /={4,}[^\n]+={4,}/)),
 
     // Result size of Tidy Core
     //   = {terms: 182, types: 90, coercions: 0, joins: 4/8}
@@ -295,11 +295,13 @@ export default grammar({
     // Infix type operators: type-level + (Nat), :~:, qualified GHC.Prim.~#, etc.
     // Two shapes -- symbolic (possibly qualified) and colon-led -- the latter
     // requiring a non-colon char so it never swallows the `::` separator.
-    // Literal arrows -> / => still win by string precedence.
+    // Literal arrows -> / => still win by string precedence. A lone `=` is never
+    // a type operator (it's the binding separator), so a `=`-led op needs a
+    // second symbolic char (==#, =<<).
     type_operator: ($) =>
       token(
         choice(
-          /([A-Z][A-Za-z0-9_']*\.)*[-+*/<>=~!&|^%][-+*/<>=~!&|^%]*#*/,
+          /([A-Z][A-Za-z0-9_']*\.)*([-+*/<>~!&|^%][-+*/<>=~!&|^%]*|=[-+*/<>=~!&|^%]+)#*/,
           /:[-+*/<>=~!&|^%][-+*/<>=~!&|^%:]*/,
         ),
       ),
@@ -377,7 +379,7 @@ export default grammar({
         /([a-z][A-Za-z0-9.-]*:)?([A-Z][A-Za-z0-9_']*\.)*[A-Z][A-Za-z0-9_'#]*(:[A-Z][A-Za-z0-9_'#]*)*/,
       ),
     // Symbolic primops used in prefix position (+#, *#, ==#, ># ...).
-    operator: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[-+*/<>=!&|^%]+#*/),
+    operator: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[-+*/<>=!&|^%.]+#*/),
     // Built-in / parenthesised constructors, optionally module-qualified:
     // [] : (,) (,,) () (##) (#,#) and GHC.Types.[] etc.
     special_con: ($) =>
@@ -385,6 +387,11 @@ export default grammar({
 
     // A line comment, or a `-- RHS size: {..}` whose record wraps across lines
     // (big dumps print thousand-separated counts, e.g. terms: 1,236).
-    comment: ($) => token(choice(seq("--", /[^\n]*/), /--[^{\n]*\{[^}]*\}/)),
+    // A line comment, or a `-- RHS size: {..}` whose count record wraps across
+    // lines (big dumps print thousand-separated counts, e.g. terms: 1,236). The
+    // wrapped body is bounded to record chars (word/space/.,:/) so it can never
+    // run past its `}` into a binding's braces.
+    comment: ($) =>
+      token(choice(seq("--", /[^\n]*/), /--[^{\n]*\{[\s\w.,:/]*\}/)),
   },
 });

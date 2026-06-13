@@ -44,7 +44,7 @@ export default grammar({
     _group: ($) => choice($.binding, $.rec_block),
 
     // ==================== Final STG: ====================
-    banner: ($) => token(prec(1, /={4,}[^\n]*={4,}/)),
+    banner: ($) => token(prec(1, /={4,}[^\n]+={4,}/)),
 
     // Rec { b1; b2; end Rec } -- a recursive group; pairs are blank-line
     // separated and each `;`-terminated like every STG binding.
@@ -305,7 +305,7 @@ export default grammar({
       token(
         /([a-z][A-Za-z0-9.-]*:)?([A-Z][A-Za-z0-9_']*\.)*[A-Z][A-Za-z0-9_'#]*/,
       ),
-    operator: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[-+*/<>=!&|^%]+#*/),
+    operator: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[-+*/<>=!&|^%.]+#*/),
     special_con: ($) =>
       token(/([A-Z][A-Za-z0-9_']*\.)*(\[\]|:|\(,+\)|\(#+\)|\(#(,+)#\)|\(\))/),
 
