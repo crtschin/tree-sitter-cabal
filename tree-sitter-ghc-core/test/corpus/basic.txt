@@ -396,3 +396,31 @@ f = let! { GHC.Types.I# x1_a1bf ~ <- x_aLS } in x1_a1bf
           (variable)))
       scrutinee: (variable)
       body: (variable))))
+
+================================
+Debug decorations (-dppr-debug): tags, ascription, id-annotation
+================================
+
+==================== Tidy Core ====================
+Result size of Tidy Core = {terms: 1, types: 0, coercions: 0, joins: 0/0}
+
+f{v r1} :: GHC.Types.Int{tc 3u}
+f{v r1} = (g{v r2} Just GHC.Types.Many{(w) d 65I} [gid] :: GHC.Types.Int{tc 3u})
+
+--------------------------------
+
+(source_file
+  (banner)
+  (result_size)
+  (binding
+    signature: (type_signature
+      (variable)
+      (constructor))
+    name: (variable)
+    rhs: (parens
+      (application
+        (variable)
+        (constructor)
+        (constructor)
+        (id_annotation))
+      (constructor))))

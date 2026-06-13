@@ -1044,36 +1044,11 @@
         },
         {
           "type": "SYMBOL",
-          "name": "kinded_tyvar"
-        },
-        {
-          "type": "SYMBOL",
           "name": "inferred_tyvar"
-        }
-      ]
-    },
-    "kinded_tyvar": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "("
         },
         {
           "type": "SYMBOL",
-          "name": "tyvar"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "_dcolon"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "_type"
-        },
-        {
-          "type": "STRING",
-          "value": ")"
+          "name": "type_paren_form"
         }
       ]
     },
@@ -1085,8 +1060,17 @@
           "value": "{"
         },
         {
-          "type": "SYMBOL",
-          "name": "tyvar"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "tyvar"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "type_paren_form"
+            }
+          ]
         },
         {
           "type": "CHOICE",
@@ -1193,11 +1177,11 @@
         "members": [
           {
             "type": "PATTERN",
-            "value": "([A-Z][A-Za-z0-9_']*\\.)*([-+*/<>~!&|^%][-+*/<>=~!&|^%]*|=[-+*/<>=~!&|^%]+)#*"
+            "value": "([A-Z][A-Za-z0-9_']*\\.)*([-+*/<>~!&|^%][-+*/<>=~!&|^%]*|=[-+*/<>=~!&|^%]+)#*(\\{[^}]*\\})?"
           },
           {
             "type": "PATTERN",
-            "value": ":[-+*/<>=~!&|^%][-+*/<>=~!&|^%:]*"
+            "value": ":[-+*/<>=~!&|^%][-+*/<>=~!&|^%:]*(\\{[^}]*\\})?"
           }
         ]
       }
@@ -1586,28 +1570,28 @@
       "type": "TOKEN",
       "content": {
         "type": "PATTERN",
-        "value": "([a-z][A-Za-z0-9.-]*:)?([A-Z][A-Za-z0-9_']*\\.)*[a-z_$][A-Za-z0-9_'$#]*([-+*/<>=~!&|^%$:]+[A-Za-z0-9_'$#]*)*"
+        "value": "([a-z][A-Za-z0-9.-]*:)?([A-Z][A-Za-z0-9_']*\\.)*[a-z_$][A-Za-z0-9_'$#]*([-+*/<>=~!&|^%$:]+[A-Za-z0-9_'$#]*)*(\\{[^}]*\\})?"
       }
     },
     "constructor": {
       "type": "TOKEN",
       "content": {
         "type": "PATTERN",
-        "value": "([a-z][A-Za-z0-9.-]*:)?([A-Z][A-Za-z0-9_']*\\.)*[A-Z][A-Za-z0-9_'#]*(:[A-Z][A-Za-z0-9_'#]*)*"
+        "value": "([a-z][A-Za-z0-9.-]*:)?([A-Z][A-Za-z0-9_']*\\.)*[A-Z][A-Za-z0-9_'#]*(:[A-Z][A-Za-z0-9_'#]*)*(\\{[^}]*\\})?"
       }
     },
     "operator": {
       "type": "TOKEN",
       "content": {
         "type": "PATTERN",
-        "value": "([A-Z][A-Za-z0-9_']*\\.)*[-+*/<>=!&|^%.]+#*"
+        "value": "([A-Z][A-Za-z0-9_']*\\.)*[-+*/<>=!&|^%.]+#*(\\{[^}]*\\})?"
       }
     },
     "special_con": {
       "type": "TOKEN",
       "content": {
         "type": "PATTERN",
-        "value": "([A-Z][A-Za-z0-9_']*\\.)*(\\[\\]|:|\\(,+\\)|\\(#+\\)|\\(#(,+)#\\)|\\(\\))"
+        "value": "([A-Z][A-Za-z0-9_']*\\.)*(\\[\\]|:|\\(,+\\)|\\(#+\\)|\\(#(,+)#\\)|\\(\\))(\\{[^}]*\\})?"
       }
     },
     "comment": {

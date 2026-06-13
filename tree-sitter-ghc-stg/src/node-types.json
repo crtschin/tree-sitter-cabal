@@ -520,10 +520,6 @@
           "named": true
         },
         {
-          "type": "kinded_tyvar",
-          "named": true
-        },
-        {
           "type": "operator",
           "named": true
         },
@@ -754,69 +750,6 @@
         },
         {
           "type": "star",
-          "named": true
-        },
-        {
-          "type": "type_list",
-          "named": true
-        },
-        {
-          "type": "type_paren_form",
-          "named": true
-        },
-        {
-          "type": "tyvar",
-          "named": true
-        },
-        {
-          "type": "unboxed_type",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "kinded_tyvar",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "constructor",
-          "named": true
-        },
-        {
-          "type": "ellipsis",
-          "named": true
-        },
-        {
-          "type": "forall_type",
-          "named": true
-        },
-        {
-          "type": "function_type",
-          "named": true
-        },
-        {
-          "type": "operator",
-          "named": true
-        },
-        {
-          "type": "promoted_type",
-          "named": true
-        },
-        {
-          "type": "special_con",
-          "named": true
-        },
-        {
-          "type": "star",
-          "named": true
-        },
-        {
-          "type": "type_apply",
           "named": true
         },
         {

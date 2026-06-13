@@ -178,10 +178,6 @@ ghc-core)
         passes/Ticks.dump-late-cc; do
         xfail["$c"]="LateCC packs bindings with no blank lines, so the _item_sep scanner cannot separate them"
     done
-    for c in ppr-debug/Bindings.dump-simpl ppr-debug/Coerce.dump-simpl \
-        ppr-debug/Ticks.dump-simpl; do
-        xfail["$c"]="heavily-decorated -dppr-debug developer format (type ascriptions, inline id annotations, unique tags throughout)"
-    done
     ;;
 ghc-cmm)
     for c in ppr-debug/Bindings.dump-cmm ppr-debug/Coerce.dump-cmm \

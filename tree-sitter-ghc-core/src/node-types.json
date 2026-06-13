@@ -38,6 +38,10 @@
             "named": true
           },
           {
+            "type": "id_annotation",
+            "named": true
+          },
+          {
             "type": "jump",
             "named": true
           },
@@ -118,6 +122,10 @@
         },
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "id_annotation",
           "named": true
         },
         {
@@ -217,6 +225,10 @@
             "named": true
           },
           {
+            "type": "id_annotation",
+            "named": true
+          },
+          {
             "type": "jump",
             "named": true
           },
@@ -309,6 +321,10 @@
             "named": true
           },
           {
+            "type": "debug_binder",
+            "named": true
+          },
+          {
             "type": "variable",
             "named": true
           }
@@ -336,6 +352,10 @@
           },
           {
             "type": "constructor",
+            "named": true
+          },
+          {
+            "type": "id_annotation",
             "named": true
           },
           {
@@ -392,6 +412,58 @@
         {
           "type": "alternative",
           "named": true
+        },
+        {
+          "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "ellipsis",
+          "named": true
+        },
+        {
+          "type": "forall_type",
+          "named": true
+        },
+        {
+          "type": "function_type",
+          "named": true
+        },
+        {
+          "type": "operator",
+          "named": true
+        },
+        {
+          "type": "promoted_type",
+          "named": true
+        },
+        {
+          "type": "special_con",
+          "named": true
+        },
+        {
+          "type": "star",
+          "named": true
+        },
+        {
+          "type": "type_apply",
+          "named": true
+        },
+        {
+          "type": "type_list",
+          "named": true
+        },
+        {
+          "type": "type_paren_form",
+          "named": true
+        },
+        {
+          "type": "tyvar",
+          "named": true
+        },
+        {
+          "type": "unboxed_type",
+          "named": true
         }
       ]
     }
@@ -422,6 +494,10 @@
           },
           {
             "type": "constructor",
+            "named": true
+          },
+          {
+            "type": "id_annotation",
             "named": true
           },
           {
@@ -505,6 +581,10 @@
             "named": true
           },
           {
+            "type": "id_annotation",
+            "named": true
+          },
+          {
             "type": "jump",
             "named": true
           },
@@ -580,6 +660,10 @@
         },
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "id_annotation",
           "named": true
         },
         {
@@ -727,6 +811,11 @@
     }
   },
   {
+    "type": "debug_binder",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "forall_type",
     "named": true,
     "fields": {},
@@ -752,10 +841,6 @@
         },
         {
           "type": "inferred_tyvar",
-          "named": true
-        },
-        {
-          "type": "kinded_tyvar",
           "named": true
         },
         {
@@ -869,6 +954,11 @@
     }
   },
   {
+    "type": "id_annotation",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "idinfo",
     "named": true,
     "fields": {}
@@ -950,6 +1040,10 @@
         },
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "id_annotation",
           "named": true
         },
         {
@@ -1039,69 +1133,6 @@
     }
   },
   {
-    "type": "kinded_tyvar",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "constructor",
-          "named": true
-        },
-        {
-          "type": "ellipsis",
-          "named": true
-        },
-        {
-          "type": "forall_type",
-          "named": true
-        },
-        {
-          "type": "function_type",
-          "named": true
-        },
-        {
-          "type": "operator",
-          "named": true
-        },
-        {
-          "type": "promoted_type",
-          "named": true
-        },
-        {
-          "type": "special_con",
-          "named": true
-        },
-        {
-          "type": "star",
-          "named": true
-        },
-        {
-          "type": "type_apply",
-          "named": true
-        },
-        {
-          "type": "type_list",
-          "named": true
-        },
-        {
-          "type": "type_paren_form",
-          "named": true
-        },
-        {
-          "type": "tyvar",
-          "named": true
-        },
-        {
-          "type": "unboxed_type",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "lambda",
     "named": true,
     "fields": {},
@@ -1131,6 +1162,10 @@
         },
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "id_annotation",
           "named": true
         },
         {
@@ -1214,6 +1249,10 @@
           },
           {
             "type": "constructor",
+            "named": true
+          },
+          {
+            "type": "id_annotation",
             "named": true
           },
           {
@@ -1372,7 +1411,7 @@
     "named": true,
     "fields": {},
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
         {
@@ -1393,6 +1432,22 @@
         },
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "ellipsis",
+          "named": true
+        },
+        {
+          "type": "forall_type",
+          "named": true
+        },
+        {
+          "type": "function_type",
+          "named": true
+        },
+        {
+          "type": "id_annotation",
           "named": true
         },
         {
@@ -1420,7 +1475,15 @@
           "named": true
         },
         {
+          "type": "promoted_type",
+          "named": true
+        },
+        {
           "type": "special_con",
+          "named": true
+        },
+        {
+          "type": "star",
           "named": true
         },
         {
@@ -1432,7 +1495,27 @@
           "named": true
         },
         {
+          "type": "type_apply",
+          "named": true
+        },
+        {
+          "type": "type_list",
+          "named": true
+        },
+        {
+          "type": "type_paren_form",
+          "named": true
+        },
+        {
+          "type": "tyvar",
+          "named": true
+        },
+        {
           "type": "unboxed_tuple",
+          "named": true
+        },
+        {
+          "type": "unboxed_type",
           "named": true
         },
         {
@@ -1572,6 +1655,10 @@
           "named": true
         },
         {
+          "type": "id_annotation",
+          "named": true
+        },
+        {
           "type": "jump",
           "named": true
         },
@@ -1667,6 +1754,10 @@
         },
         {
           "type": "constructor",
+          "named": true
+        },
+        {
+          "type": "id_annotation",
           "named": true
         },
         {
@@ -2236,6 +2327,10 @@
           "named": true
         },
         {
+          "type": "id_annotation",
+          "named": true
+        },
+        {
           "type": "jump",
           "named": true
         },
@@ -2509,6 +2604,10 @@
   {
     "type": "result_size",
     "named": true
+  },
+  {
+    "type": "return",
+    "named": false
   },
   {
     "type": "scope_annotation",

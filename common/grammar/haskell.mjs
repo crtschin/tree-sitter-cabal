@@ -37,19 +37,25 @@ export function makeLiteralRules() {
 // C:Show, D:R:FInt).
 // operator: symbolic primops/ops in prefix position (+#, ==#, (.), (.&.)).
 // special_con: built-in/parenthesised cons ([] : (,) (##) (#,#) ()), qualified.
+// A trailing `{..}` is a -dppr-debug decoration glued to the name (`f{v r1iT}`,
+// `Int{(w) tc 32}`). A name is never glued to a structural `{` in a dump, so
+// folding the tag into the token is safe and keeps the tree flat.
 export function makeLexicalRules() {
   return {
     variable: ($) =>
       token(
-        /([a-z][A-Za-z0-9.-]*:)?([A-Z][A-Za-z0-9_']*\.)*[a-z_$][A-Za-z0-9_'$#]*([-+*/<>=~!&|^%$:]+[A-Za-z0-9_'$#]*)*/,
+        /([a-z][A-Za-z0-9.-]*:)?([A-Z][A-Za-z0-9_']*\.)*[a-z_$][A-Za-z0-9_'$#]*([-+*/<>=~!&|^%$:]+[A-Za-z0-9_'$#]*)*(\{[^}]*\})?/,
       ),
     constructor: ($) =>
       token(
-        /([a-z][A-Za-z0-9.-]*:)?([A-Z][A-Za-z0-9_']*\.)*[A-Z][A-Za-z0-9_'#]*(:[A-Z][A-Za-z0-9_'#]*)*/,
+        /([a-z][A-Za-z0-9.-]*:)?([A-Z][A-Za-z0-9_']*\.)*[A-Z][A-Za-z0-9_'#]*(:[A-Z][A-Za-z0-9_'#]*)*(\{[^}]*\})?/,
       ),
-    operator: ($) => token(/([A-Z][A-Za-z0-9_']*\.)*[-+*/<>=!&|^%.]+#*/),
+    operator: ($) =>
+      token(/([A-Z][A-Za-z0-9_']*\.)*[-+*/<>=!&|^%.]+#*(\{[^}]*\})?/),
     special_con: ($) =>
-      token(/([A-Z][A-Za-z0-9_']*\.)*(\[\]|:|\(,+\)|\(#+\)|\(#(,+)#\)|\(\))/),
+      token(
+        /([A-Z][A-Za-z0-9_']*\.)*(\[\]|:|\(,+\)|\(#+\)|\(#(,+)#\)|\(\))(\{[^}]*\})?/,
+      ),
   };
 }
 
@@ -67,10 +73,16 @@ export function makeTypeRules() {
           $._type,
         ),
       ),
-    _forall_binder: ($) => choice($.tyvar, $.kinded_tyvar, $.inferred_tyvar),
-    kinded_tyvar: ($) => seq("(", $.tyvar, $._dcolon, $._type, ")"),
+    // A `(a :: k)` binder is a type_paren_form. -dppr-debug decorates it with
+    // junk before the kind, `(a Nothing [tv] :: k)`, which is one too.
+    _forall_binder: ($) => choice($.tyvar, $.inferred_tyvar, $.type_paren_form),
     inferred_tyvar: ($) =>
-      seq("{", $.tyvar, optional(seq($._dcolon, $._type)), "}"),
+      seq(
+        "{",
+        choice($.tyvar, $.type_paren_form),
+        optional(seq($._dcolon, $._type)),
+        "}",
+      ),
 
     // `::` and its -fprint-unicode-syntax glyph.
     _dcolon: ($) => choice("::", "∷"),
@@ -84,8 +96,8 @@ export function makeTypeRules() {
     type_operator: ($) =>
       token(
         choice(
-          /([A-Z][A-Za-z0-9_']*\.)*([-+*/<>~!&|^%][-+*/<>=~!&|^%]*|=[-+*/<>=~!&|^%]+)#*/,
-          /:[-+*/<>=~!&|^%][-+*/<>=~!&|^%:]*/,
+          /([A-Z][A-Za-z0-9_']*\.)*([-+*/<>~!&|^%][-+*/<>=~!&|^%]*|=[-+*/<>=~!&|^%]+)#*(\{[^}]*\})?/,
+          /:[-+*/<>=~!&|^%][-+*/<>=~!&|^%:]*(\{[^}]*\})?/,
         ),
       ),
     mult_arrow: ($) => seq("%", $._type_atom, choice("->", "→")),

@@ -62,6 +62,9 @@ export default grammar({
     // viability picks the right one (a rule's `(@a)` does not form a
     // paren_operator).
     [$.idinfo, $._soup],
+    // A `:: type` after a bare coercion inside `(..)` could close the coercion's
+    // own optional ascription or the enclosing parens ascription. Let GLR pick.
+    [$.coercion],
   ],
 
   rules: {
@@ -262,9 +265,19 @@ export default grammar({
         $.parens,
         $.tuple,
         $.unboxed_tuple,
+        $.id_annotation,
       ),
 
-    parens: ($) => seq("(", $._expr, ")"),
+    // [gid..] / [lid..] -- an occurrence's IdInfo, printed inline under
+    // -dppr-debug. Coarse balanced soup, like the binding [IdInfo].
+    id_annotation: ($) => prec.dynamic(1, seq("[", repeat($._soup), "]")),
+
+    // A -dppr-debug case binder carries its annotations, type, and IdInfo inside
+    // the parens, `(wild [Occ=Dead] :: t Unf=..)`. Coarse balanced soup.
+    debug_binder: ($) => prec.dynamic(1, seq("(", repeat($._soup), ")")),
+
+    // -dppr-debug ascribes a parenthesised expression with its type, `(e :: t)`.
+    parens: ($) => seq("(", $._expr, optional(seq($._dcolon, $._type)), ")"),
     tuple: ($) => seq("(", $._expr, repeat1(seq(",", $._expr)), ")"),
     unboxed_tuple: ($) => seq("(#", sepBy(",", $._expr), "#)"),
 
@@ -278,7 +291,8 @@ export default grammar({
     lambda: ($) =>
       seq(choice("\\", "/"), repeat1($._binder), choice("->", "→"), $._expr),
 
-    jump: ($) => seq("jump", $.variable, repeat($._arg)),
+    // The join target is a variable, or `(v :: t)` under -dppr-debug.
+    jump: ($) => seq("jump", $._atom, repeat($._arg)),
 
     let: ($) =>
       seq(
@@ -294,8 +308,13 @@ export default grammar({
       seq(
         "case",
         field("scrutinee", $._expr),
+        // -dppr-debug prints the case's return type, `case e return t of ..`.
+        optional(seq("return", $._type)),
         "of",
-        field("binder", optional(choice($.variable, $.annotated_binder))),
+        field(
+          "binder",
+          optional(choice($.variable, $.annotated_binder, $.debug_binder)),
+        ),
         "{",
         sepBy(";", $.alternative),
         "}",
