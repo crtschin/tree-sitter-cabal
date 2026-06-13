@@ -6,9 +6,17 @@ import 'common/recipes.just'
 
 default: test
 
-# Run the inline unit tests and parse the Cmm-dump corpus for this grammar.
-test: build check-queries parse-corpus gen-corpus
-    tree-sitter test --lib-path result/parser --lang-name {{ lang }}
+# Run every suite to completion (keep going past failures); exit non-zero if any
+# failed.
+test: build
+    #!/usr/bin/env bash
+    set -uo pipefail
+    rc=0
+    ../test/check-queries.sh {{ slug }} | tapview || rc=1
+    ../test/parse-corpus.sh {{ slug }} | tapview || rc=1
+    ../test/gen-corpus.sh {{ slug }} | tapview || rc=1
+    tree-sitter test --lib-path result/parser --lang-name {{ lang }} || rc=1
+    exit "$rc"
 
 # Parse every harvested Cmm dump (`Output Cmm` / `Cmm produced by codegen`
 # banner) in $GHC_SRC -- a clean gate (0 ERROR/MISSING), also run by `test`.

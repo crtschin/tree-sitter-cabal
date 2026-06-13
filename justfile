@@ -7,8 +7,17 @@ mod ghc-dump 'tree-sitter-ghc-dump'
 
 default: test
 
-# Run tests for every grammar
-test: cabal::test cabal-project::test ghc-core::test ghc-stg::test ghc-cmm::test ghc-dump::test
+# Run every grammar's full suite to completion (keep going past failures), then
+# exit non-zero if any grammar failed.
+test:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    rc=0
+    for g in cabal cabal-project ghc-core ghc-stg ghc-cmm ghc-dump; do
+        echo "==> $g"
+        just "$g::test" || rc=1
+    done
+    exit "$rc"
 
 # Build every grammar
 build: cabal::build cabal-project::build ghc-core::build ghc-stg::build ghc-cmm::build ghc-dump::build
