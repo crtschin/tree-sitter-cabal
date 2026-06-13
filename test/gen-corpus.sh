@@ -180,27 +180,19 @@ ghc-core)
     done
     for c in ppr-debug/Bindings.dump-simpl ppr-debug/Coerce.dump-simpl \
         ppr-debug/Ticks.dump-simpl; do
-        xfail["$c"]="exotic -dppr-debug display format (debug uniques/annotations)"
-    done
-    for c in case-as-let/Bindings.dump-simpl case-as-let/Coerce.dump-simpl \
-        case-as-let/Ticks.dump-simpl; do
-        xfail["$c"]="exotic -dppr-case-as-let display form"
+        xfail["$c"]="heavily-decorated -dppr-debug developer format (type ascriptions, inline id annotations, unique tags throughout)"
     done
     ;;
 ghc-cmm)
-    for c in passes/Bindings.dump-cmm-caf passes/Coerce.dump-cmm-caf \
-        passes/Ticks.dump-cmm-caf; do
-        xfail["$c"]="CAFEnv analysis dump, not Cmm syntax ([(label,{set})] tuple-lists)"
-    done
     for c in ppr-debug/Bindings.dump-cmm ppr-debug/Coerce.dump-cmm \
         ppr-debug/Ticks.dump-cmm; do
-        xfail["$c"]="exotic -dppr-debug display format (debug uniques/annotations)"
+        xfail["$c"]="heavily-decorated -dppr-debug developer format (package prefixes, unique tags throughout)"
     done
     ;;
 ghc-stg)
     for c in ppr-debug/Bindings.dump-stg-final ppr-debug/Coerce.dump-stg-final \
         ppr-debug/Ticks.dump-stg-final; do
-        xfail["$c"]="exotic -dppr-debug display format (debug uniques/annotations)"
+        xfail["$c"]="heavily-decorated -dppr-debug developer format (type ascriptions, unique tags throughout)"
     done
     ;;
 esac

@@ -47,15 +47,17 @@ export default grammar({
     // a parenthesised assignment lhs. GLR explores both (only the soup
     // completes).
     [$.static_info],
+    // An empty `[]` could open a CmmGroup or a CAFEnv. Either reading is fine.
+    [$.cmm_group, $.caf_env],
   ],
 
   rules: {
     // The codegen surface is `[ decl, .. ]` CmmGroups. The per-stage pipeline
     // dumps (-ddump-cmm-sink/-sp/-switch/-cbe/-cfg, -ddump-opt-cmm,
     // -ddump-cmm-info) print bare, ungrouped: a lone `{offset ..}` graph, a bare
-    // proc, or a bare `section ..`. Accept all four at top level.
+    // proc, or a bare `section ..`. -ddump-cmm-caf prints a CAFEnv instead.
     source_file: ($) =>
-      repeat(choice($.banner, $.cmm_group, $._decl, $.offset_body)),
+      repeat(choice($.banner, $.cmm_group, $._decl, $.offset_body, $.caf_env)),
 
     // ==================== Output Cmm ==================== (shared)
     banner,
@@ -63,6 +65,13 @@ export default grammar({
     // [ decl, decl, .. ] is a CmmGroup of procs and data sections.
     cmm_group: ($) => seq("[", sepBy(",", $._decl), "]"),
     _decl: ($) => choice($.proc, $.data_section),
+
+    // -ddump-cmm-caf prints a CAF analysis, not Cmm code: a list of
+    // (block-label, {closure, ..}) pairs, the CAF set reachable from each block.
+    caf_env: ($) => seq("[", sepBy(",", $.caf_entry), "]"),
+    caf_entry: ($) =>
+      seq("(", field("label", $.identifier), ",", $.caf_set, ")"),
+    caf_set: ($) => seq("{", sepBy(",", $.identifier), "}"),
 
     // name() { info-table offset-body } is a CmmProc. The `// [regs]` live-set
     // after `{` is a comment (an extra).

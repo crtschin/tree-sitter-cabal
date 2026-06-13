@@ -212,6 +212,62 @@
     }
   },
   {
+    "type": "caf_entry",
+    "named": true,
+    "fields": {
+      "label": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "caf_set",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "caf_env",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "caf_entry",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "caf_set",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "call",
     "named": true,
     "fields": {
@@ -758,6 +814,10 @@
       "types": [
         {
           "type": "banner",
+          "named": true
+        },
+        {
+          "type": "caf_env",
           "named": true
         },
         {

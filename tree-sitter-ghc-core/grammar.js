@@ -199,11 +199,28 @@ export default grammar({
         $.lambda,
         $.let,
         $.case,
+        $.case_as_let,
         $.jump,
         $.cast,
         $.tick_expr,
         $.application,
         $._atom,
+      ),
+
+    // -dppr-case-as-let prints a single-alternative case as
+    // `let! { <pat> ~ <binder>? <- <scrutinee> } in <body>`.
+    case_as_let: ($) =>
+      seq(
+        "let!",
+        "{",
+        field("pattern", $.pattern),
+        "~",
+        optional(choice($.variable, $.annotated_binder)),
+        "<-",
+        field("scrutinee", $._expr),
+        "}",
+        "in",
+        field("body", $._expr),
       ),
 
     // e `cast` co  (compiler/GHC/Core/Ppr.hs ppr_expr Cast).

@@ -203,3 +203,29 @@ Bare offset graph with unwind (pipeline-stage dump)
           (cmm_type)
           address: (identifier))
         (identifier)))))
+
+================================
+CAFEnv analysis dump (-ddump-cmm-caf)
+================================
+
+==================== CAFEnv ====================
+[(c1ka, {block_c1ka_closure}), (c1kd, {block_c1ka_closure, Bindings.poly_closure}),
+ (c1kz, {})]
+
+--------------------------------
+
+(source_file
+  (banner)
+  (caf_env
+    (caf_entry
+      label: (identifier)
+      (caf_set
+        (identifier)))
+    (caf_entry
+      label: (identifier)
+      (caf_set
+        (identifier)
+        (identifier)))
+    (caf_entry
+      label: (identifier)
+      (caf_set))))

@@ -26,6 +26,10 @@
             "named": true
           },
           {
+            "type": "case_as_let",
+            "named": true
+          },
+          {
             "type": "cast",
             "named": true
           },
@@ -201,6 +205,10 @@
             "named": true
           },
           {
+            "type": "case_as_let",
+            "named": true
+          },
+          {
             "type": "cast",
             "named": true
           },
@@ -319,6 +327,10 @@
             "named": true
           },
           {
+            "type": "case_as_let",
+            "named": true
+          },
+          {
             "type": "cast",
             "named": true
           },
@@ -379,6 +391,176 @@
       "types": [
         {
           "type": "alternative",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "case_as_let",
+    "named": true,
+    "fields": {
+      "body": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "case",
+            "named": true
+          },
+          {
+            "type": "case_as_let",
+            "named": true
+          },
+          {
+            "type": "cast",
+            "named": true
+          },
+          {
+            "type": "constructor",
+            "named": true
+          },
+          {
+            "type": "jump",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "let",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "operator",
+            "named": true
+          },
+          {
+            "type": "parens",
+            "named": true
+          },
+          {
+            "type": "special_con",
+            "named": true
+          },
+          {
+            "type": "tick_expr",
+            "named": true
+          },
+          {
+            "type": "tuple",
+            "named": true
+          },
+          {
+            "type": "unboxed_tuple",
+            "named": true
+          },
+          {
+            "type": "variable",
+            "named": true
+          }
+        ]
+      },
+      "pattern": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "pattern",
+            "named": true
+          }
+        ]
+      },
+      "scrutinee": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "application",
+            "named": true
+          },
+          {
+            "type": "case",
+            "named": true
+          },
+          {
+            "type": "case_as_let",
+            "named": true
+          },
+          {
+            "type": "cast",
+            "named": true
+          },
+          {
+            "type": "constructor",
+            "named": true
+          },
+          {
+            "type": "jump",
+            "named": true
+          },
+          {
+            "type": "lambda",
+            "named": true
+          },
+          {
+            "type": "let",
+            "named": true
+          },
+          {
+            "type": "literal",
+            "named": true
+          },
+          {
+            "type": "operator",
+            "named": true
+          },
+          {
+            "type": "parens",
+            "named": true
+          },
+          {
+            "type": "special_con",
+            "named": true
+          },
+          {
+            "type": "tick_expr",
+            "named": true
+          },
+          {
+            "type": "tuple",
+            "named": true
+          },
+          {
+            "type": "unboxed_tuple",
+            "named": true
+          },
+          {
+            "type": "variable",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "annotated_binder",
+          "named": true
+        },
+        {
+          "type": "variable",
           "named": true
         }
       ]
@@ -940,6 +1122,10 @@
           "named": true
         },
         {
+          "type": "case_as_let",
+          "named": true
+        },
+        {
           "type": "cast",
           "named": true
         },
@@ -1016,6 +1202,10 @@
           },
           {
             "type": "case",
+            "named": true
+          },
+          {
+            "type": "case_as_let",
             "named": true
           },
           {
@@ -1194,6 +1384,10 @@
           "named": true
         },
         {
+          "type": "case_as_let",
+          "named": true
+        },
+        {
           "type": "cast",
           "named": true
         },
@@ -1366,6 +1560,10 @@
           "named": true
         },
         {
+          "type": "case_as_let",
+          "named": true
+        },
+        {
           "type": "cast",
           "named": true
         },
@@ -1457,6 +1655,10 @@
         },
         {
           "type": "case",
+          "named": true
+        },
+        {
+          "type": "case_as_let",
           "named": true
         },
         {
@@ -2022,6 +2224,10 @@
           "named": true
         },
         {
+          "type": "case_as_let",
+          "named": true
+        },
+        {
           "type": "cast",
           "named": true
         },
@@ -2188,6 +2394,10 @@
     "named": false
   },
   {
+    "type": "<-",
+    "named": false
+  },
+  {
     "type": "=",
     "named": false
   },
@@ -2281,6 +2491,10 @@
     "named": false
   },
   {
+    "type": "let!",
+    "named": false
+  },
+  {
     "type": "letrec",
     "named": false
   },
@@ -2334,6 +2548,10 @@
   },
   {
     "type": "}",
+    "named": false
+  },
+  {
+    "type": "~",
     "named": false
   },
   {
